@@ -1,1 +1,1 @@
-"""UCRA.models package (built in upcoming steps)."""
+"""UCRA.models package."""

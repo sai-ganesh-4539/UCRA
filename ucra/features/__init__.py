@@ -1,1 +1,1 @@
-"""UCRA.features package (built in upcoming steps)."""
+"""UCRA.features package."""
