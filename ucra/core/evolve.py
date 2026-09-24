@@ -94,4 +94,4 @@ class EvolutionEngine:
         self.n_updates += 1
         self.model.eval()
         return {"updated": True, "replay": len(X),
-                "loss": float(loss), "n_updates": self.n_updates}
+                "loss": float(loss.detach()), "n_updates": self.n_updates}

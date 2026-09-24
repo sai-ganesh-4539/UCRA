@@ -133,7 +133,7 @@ def main():
                     update_points.append(t)
                     # refresh quantile forecasts with evolved theta
                     pred_q = predict_quantiles(model, scaler.transform(X[ite]))
-        evo.remember(scaler.transform(X[ite][t]), Y[ite][t])
+        evo.remember(scaler.transform(X[ite][t]), scY.transform(Y[ite][t]))
 
         log_rows.append({"t": t, "ts": ts_test[t], "demand": D_test[t],
                          "R": r_t, "R_target": r_target, "u_hat": unc["u_hat"],

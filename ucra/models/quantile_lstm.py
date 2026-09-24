@@ -69,7 +69,7 @@ def train_model(model: QuantileLSTM, Xtr, Ytr, Xva, Yva, cfg: dict,
             l = loss_fn(model(xb), yb)
             l.backward()
             opt.step()
-            tl += float(l) * len(xb)
+            tl += float(l.detach()) * len(xb)
         tl /= max(1, len(Xtr))
 
         model.eval()

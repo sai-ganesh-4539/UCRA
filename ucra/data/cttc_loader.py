@@ -1,4 +1,4 @@
-"""Loader for Zenodo 10610616 - CTTC B5G Network Slicing Dataset
+"""Loader for Zenodo 10610616 — CTTC B5G Network Slicing Dataset
 (Farreras et al., Data in Brief 55:110738, 2024, CC-BY-4.0).
 
 Each sample is a steady-state snapshot of a slicing simulation:
@@ -35,7 +35,7 @@ def load_cttc(samples_dir: str | Path = "data/cttc/slicing-simulations",
     samples_dir = Path(samples_dir)
     if not samples_dir.exists():
         raise FileNotFoundError(
-            f"{samples_dir} not found. Run: python scripts/download_data.py --cttc")
+            f"{samples_dir} not found. Run: bash scripts/download_data.sh cttc")
     _ensure_datanetapi(samples_dir)
 
     try:
@@ -43,7 +43,7 @@ def load_cttc(samples_dir: str | Path = "data/cttc/slicing-simulations",
     except ImportError as e:  # pragma: no cover
         raise ImportError(
             "datanetAPI.py must sit inside the unzipped dataset folder "
-            "(scripts/download_data.py --cttc places it there)") from e
+            "(it ships with Zenodo 10610616)") from e
 
     reader = DatanetAPI(str(samples_dir))
     rows = []
@@ -58,14 +58,35 @@ def load_cttc(samples_dir: str | Path = "data/cttc/slicing-simulations",
             perf = sample.get_performance_matrix()
             n = sample.get_network_size()
 
-            for sid in range(len(sample.get_slices())):
-                stype = str(sample.get_slice_type(sid))
-                delta = float(sample.get_slice_delta(sid))
-                flows = sample.get_slice_flows(sid)
+            # Slices arrive as plain dicts in the current dataset build
+            # (jsonpickle has no py/object markers) but as objects in older
+            # builds - read both shapes. Flows carry `bandwidth` (bps) or a
+            # `traffic_string` whose 2nd field is the offered rate.
+            for sdict in (sample.get_slices() or []):
+                if isinstance(sdict, dict):
+                    stype = str(sdict.get("type", "unknown"))
+                    delta = float(sdict.get("delta", 0.0) or 0.0)
+                    flows = sdict.get("flows", []) or []
+                else:
+                    stype = str(getattr(sdict, "type", "unknown"))
+                    delta = float(getattr(sdict, "delta", 0.0) or 0.0)
+                    flows = getattr(sdict, "flows", []) or []
                 offered = 0.0
-                for fl in (flows if flows is not None else []):
-                    offered += float(getattr(fl, "avgRate", 0) or 0) \
-                        + float(getattr(fl, "rate", 0) or 0)
+                for fl in flows:
+                    if isinstance(fl, dict):
+                        rate = fl.get("bandwidth") or fl.get("avgRate") \
+                            or fl.get("rate") or 0
+                        if not rate:
+                            parts = str(fl.get("traffic_string", "")).split(",")
+                            if len(parts) > 1:
+                                try:
+                                    rate = float(parts[1])
+                                except ValueError:
+                                    rate = 0.0
+                        offered += float(rate or 0)
+                    else:
+                        offered += float(getattr(fl, "avgRate", 0) or 0) \
+                            + float(getattr(fl, "rate", 0) or 0)
                 # aggregate drop/delay over all src-dst pairs weighted equally
                 drops, delays, cells = [], [], 0
                 for s in range(n):
