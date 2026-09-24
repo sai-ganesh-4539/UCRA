@@ -1,7 +1,4 @@
-# ============================================================
-# docs/15_glossary.md
-# ============================================================
-DOCS["15_glossary.md"] = r'''# 15 -- Glossary (Plain Language, No Jargon Left Behind)
+# 15 -- Glossary (Plain Language, No Jargon Left Behind)
 
 **URLLC / eMBB / mMTC** -- the three 5G slice families: ultra-reliable
 low-latency (factory robots, remote surgery), enhanced mobile broadband
@@ -141,71 +138,3 @@ loaded by run_ucra/demo/evolution so training happens once.
 
 **Early stopping / patience** -- stop training when validation loss stops
 improving for `patience` epochs; restore the best epoch.
-'''
-# @@APPEND@@
-
-# ============================================================
-# driver
-# ============================================================
-
-README_ANCHOR = "## Repo layout"
-README_INSERT = """## Documentation
-
-Every module, equation, result and design decision is explained in
-[`docs/`](docs/) -- 16 guides with suggested reading orders in
-**[docs/README.md](docs/README.md)**.
-
-| Start with | If you want to ... |
-|---|---|
-| `docs/01_big_picture.md` | understand UCRA in plain English |
-| `docs/02_pipeline_walkthrough.md` | know what every command and output file does |
-| `docs/09_results_interpretation.md` | understand the printed numbers |
-| `docs/13_faq_troubleshooting.md` | fix an error |
-
-"""
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser(description="UCRA documentation generator")
-    ap.add_argument("--dest", default="docs", help="target folder (default: docs)")
-    args = ap.parse_args()
-
-    dest = Path(args.dest)
-    dest.mkdir(parents=True, exist_ok=True)
-
-    print("=" * 60)
-    print(" UCRA documentation generator")
-    print("=" * 60)
-    for name in sorted(DOCS):
-        content = DOCS[name]
-        path = dest / name
-        path.write_text(content, encoding="utf-8")
-        print(f"  wrote {dest.as_posix()}/{name:<34} ({len(content):>7,} chars)")
-
-    # ---- README.md index insert (idempotent) ----
-    readme = Path("README.md")
-    if not readme.exists():
-        print("  [skip] README.md not found (no index section added)")
-    elif "docs/01_big_picture.md" in readme.read_text(encoding="utf-8"):
-        print("  [skip] README.md already links the docs index")
-    else:
-        text = readme.read_text(encoding="utf-8")
-        if README_ANCHOR in text:
-            text = text.replace(README_ANCHOR, README_INSERT + README_ANCHOR, 1)
-            readme.write_text(text, encoding="utf-8")
-            print("  patched README.md (## Documentation section added)")
-        else:
-            text = text.rstrip("\n") + "\n\n" + README_INSERT
-            readme.write_text(text, encoding="utf-8")
-            print("  appended README.md (## Documentation section added)")
-
-    print("-" * 60)
-    print(f"All {len(DOCS)} docs written to {dest.as_posix()}/ (+ README index).")
-    print("Suggested next steps:")
-    print("  1. open docs/README.md and follow a reading order")
-    print("  2. git add -A && git commit -m \"docs: full 16-guide documentation set\"")
-    print("  3. git push")
-
-
-if __name__ == "__main__":
-    main()

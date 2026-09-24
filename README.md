@@ -90,6 +90,19 @@ transform holds near-zero violations in exchange for over-provisioning
 (see `outputs/fig_cttc_slices.png` and the kappa sweep inside
 `outputs/cttc_results.json`).
 
+## Documentation
+
+Every module, equation, result and design decision is explained in
+[`docs/`](docs/) -- 16 guides with suggested reading orders in
+**[docs/README.md](docs/README.md)**.
+
+| Start with | If you want to ... |
+|---|---|
+| `docs/01_big_picture.md` | understand UCRA in plain English |
+| `docs/02_pipeline_walkthrough.md` | know what every command and output file does |
+| `docs/09_results_interpretation.md` | understand the printed numbers |
+| `docs/13_faq_troubleshooting.md` | fix an error |
+
 ## Repo layout
 
 ```
