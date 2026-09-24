@@ -1,0 +1,96 @@
+# ============================================================
+# UCRA default configuration
+# Uncertainty-to-Reservation Transformation Algorithm
+# for Self-Evolving Risk-Adaptive Resource Allocation
+# ============================================================
+
+seed: 42
+
+paths:
+  raw_data: data                 # downloaded Zenodo archives live here
+  outputs: outputs               # models, metrics, figures
+
+# ------------------------------------------------------------
+# Dataset 1: CTTC B5G Network Slicing (Zenodo 10610616)
+#   role: slice-level reservation logic (Stages 2-3 + violations)
+# Dataset 2: Live 5G/4G/2G RAN PM counters (Zenodo 17815388)
+#   role: real temporal demand uncertainty (Stages 1, 4, 5)
+# Dataset 3 (optional failsafe): Liverpool 5G HDD
+# ------------------------------------------------------------
+data:
+  dataset: ran                   # "ran" | "cttc" | "synthetic"
+  ran:
+    # 15-min sector-level PM counters; we aggregate sectors -> network demand
+    subset: dataset01            # dataset01 | dataset02 | dataset03
+    target: data_volume          # demand series to forecast (data volume)
+    agg: sum                     # sector aggregation
+    resample: null               # series is already 15-min; null = keep
+  cttc:
+    samples_dir: data/cttc/slicing-simulations   # unpacked archive
+    slices: [eMBB, mMTC, URLLC]
+  synthetic:
+    n_steps: 2016                # 3 weeks @ 15-min
+    n_sectors: 8
+
+# ------------------------------------------------------------
+# Stage 1 - Uncertainty Estimation (quantile LSTM)
+# ------------------------------------------------------------
+model:
+  name: quantile_lstm
+  seq_len: 96                    # input window: 24 h @ 15-min
+  horizon: 4                     # predict 1 h ahead @ 15-min steps
+  hidden_size: 64
+  num_layers: 2
+  dropout: 0.1
+  quantiles: [0.05, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99]
+  batch_size: 64
+  lr: 0.001
+  max_epochs: 50
+  patience: 6                    # early stopping
+  train_val_test: [0.7, 0.15, 0.15]
+
+# ------------------------------------------------------------
+# Stage 2 - Uncertainty-to-Reservation Transformation  Phi
+#   R_t = clip( q_tau_hat + kappa * spread_t * (1 + rho_weight * rho_t),
+#               0, capacity )
+# ------------------------------------------------------------
+phi:
+  base_tau: 0.9                  # base quantile the reservation follows
+  kappa: 0.5                     # risk scaling of the uncertainty spread
+  rho_weight: 0.3                # weight of the risk indicator rho_t
+  min_headroom: 0.05             # keep >= 5% headroom above point forecast
+  max_reserve_ratio: 0.95        # never reserve more than 95% of capacity
+
+# ------------------------------------------------------------
+# Stage 3 - Risk-Adaptive Allocation
+# ------------------------------------------------------------
+allocation:
+  pressure_exponent: 1.0         # demand-pressure weighting
+  risk_exponent: 0.5             # risk weighting per slice/sector
+  best_effort_share: 0.1         # capacity kept out of reservations
+
+# ------------------------------------------------------------
+# Stage 4 - Reservation Update & Release
+# ------------------------------------------------------------
+update:
+  ewma_alpha: 0.3                # smoothing of reservation adjustments
+  release_hysteresis: 0.1        # release headroom only if >10% unused
+  drift_window: 96               # rolling window for drift detection
+
+# ------------------------------------------------------------
+# Stage 5 - Self-Evolving Learning
+# ------------------------------------------------------------
+evolution:
+  violation_trigger: 0.15        # fine-tune if rolling violation rate > 15%
+  drift_zscore: 3.0              # or if demand z-score exceeds 3
+  replay_size: 512               # replay buffer for continual learning
+  finetune_epochs: 3
+  eval_every: 96                 # check evolution triggers every 24 h
+
+# ------------------------------------------------------------
+# Evaluation (Feedback & Evaluation layer)
+# ------------------------------------------------------------
+eval:
+  metrics: [reservation_error, violation_rate, utilization, waste]
+  baselines: [static_peak, mean_forecast, oracle_quantile]
+  sweep_kappa: [0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0]

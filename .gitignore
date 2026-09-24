@@ -1,0 +1,35 @@
+# --- data (never commit datasets) ---
+data/**
+!data/**/
+!data/.gitkeep
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# --- experiment outputs ---
+outputs/
+runs/
+*.pt
+*.pth
+*.ckpt
+
+# --- notebooks ---
+.ipynb_checkpoints/
+
+# --- os / ide ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- logs ---
+*.log
+wandb/
