@@ -1,0 +1,28 @@
+{
+  "ucra": {
+    "reservation_error": 0.10798687751009597,
+    "violation_rate": 0.0,
+    "utilization": 0.7169706975369444,
+    "waste": 0.10798687751009597
+  },
+  "static_peak": {
+    "reservation_error": 0.3046021652312987,
+    "violation_rate": 0.0,
+    "utilization": 0.547524663283111,
+    "waste": 0.3046021652312987
+  },
+  "mean_forecast": {
+    "reservation_error": 0.01957099884748459,
+    "violation_rate": 0.503968253968254,
+    "utilization": 0.9529198408126831,
+    "waste": 0.00918536726385355
+  },
+  "oracle_quantile": {
+    "reservation_error": 0.2010344701505471,
+    "violation_rate": 0.1626984126984127,
+    "utilization": 0.6490303885022284,
+    "waste": 0.1948028377889572
+  },
+  "capacity": 143954.525,
+  "evolution_updates": 0
+}

@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# push_outputs_kit.py  --  UCRA: publish result artifacts to GitHub
+#
+# What it does (idempotent, safe to re-run):
+#   1. patches .gitignore: stops ignoring outputs/ results (model.pt,
+#      scaler.npz and data/** stay ignored)
+#   2. writes outputs/README.md: manifest of every artifact + reference numbers
+#   3. checks which expected artifacts exist in outputs/ on this machine
+#   4. prints the exact git commands to push (PowerShell 5.1 safe, one per line)
+#
+# Run it in the repo root (E:\UCRA):   python push_outputs_kit.py
+# ==============================================================================
+from pathlib import Path
+import hashlib
+import sys
+
+# ----------------------------------------------------------------- gitignore
+GI_COMMENT_OLD = "# --- experiment outputs ---"
+GI_COMMENT_NEW = ("# --- experiment outputs: keep results + figures, "
+                  "ignore binaries ---")
+GI_LINE_OLD = "outputs/"
+GI_LINE_NEW = "outputs/scaler.npz"
+
+# ------------------------------------------------- expected artifacts in outputs/
+# (filename, written by, content)
+EXPECTED = [
+    ("audit_demand.png", "scripts/audit_data.py",
+     "demand series + histogram with capacity line"),
+    ("history.png", "scripts/train.py",
+     "training pinball-loss curves"),
+    ("train_metrics.json", "scripts/train.py",
+     "final loss, epochs, parameter count"),
+    ("ucra_results.json", "scripts/run_ucra.py",
+     "headline metrics + baselines + kappa sweep"),
+    ("ucra_log.csv", "scripts/run_ucra.py",
+     "one row per test slot (252): ts, demand, R_ucra, R_static, flags"),
+    ("fig_demand_vs_reservation.png", "scripts/run_ucra.py",
+     "demand vs UCRA reservation vs static reservation"),
+    ("fig_quantile_band.png", "scripts/run_ucra.py",
+     "quantile fan chart (q05-q99) vs realized demand"),
+    ("fig_self_evolution.png", "scripts/run_ucra.py",
+     "rolling violations + Stage-5 update points"),
+    ("fig_kappa_sweep.png", "scripts/run_ucra.py --sweep",
+     "risk-utility frontier (kappa 0 to 2.0)"),
+    ("fig_drift_demo.png", "scripts/demo_evolution.py",
+     "frozen vs self-evolving policy under +35% demand surge"),
+    ("drift_demo.json", "scripts/demo_evolution.py",
+     "post-surge violations/utilization + Stage-5 update slots"),
+    ("cttc_results.json", "scripts/run_cttc_eval.py",
+     "per-slice policy comparison + kappa sweep + QoS-gap fields"),
+    ("fig_cttc_slices.png", "scripts/run_cttc_eval.py",
+     "violation + utilization bars, three policies per slice type"),
+]
+
+MANIFEST = r'''# outputs/ - experiment artifacts (committed results)
+
+This folder holds everything the UCRA pipeline produces. The small result
+artifacts (JSON / CSV / PNG) ARE committed so that every number quoted in the
+root README and in docs/ can be inspected without re-running anything.
+Binary checkpoints and the raw datasets are NOT committed - both are exactly
+reproducible (see the bottom section).
+
+## Artifact map
+
+### RAN pipeline - Zenodo 17815388 (live commercial network, 15-min PM counters)
+
+| file | written by | content |
+|---|---|---|
+| audit_demand.png | scripts/audit_data.py | demand series + histogram with capacity line |
+| history.png | scripts/train.py | training pinball-loss curves |
+| train_metrics.json | scripts/train.py | final loss, epochs, parameter count (52,252) |
+| ucra_results.json | scripts/run_ucra.py | headline metrics: coverage, violations, utilization, reservation error + all baselines + kappa sweep |
+| ucra_log.csv | scripts/run_ucra.py | one row per test slot (252): ts, demand, R_ucra, R_static, violation flags |
+| fig_demand_vs_reservation.png | scripts/run_ucra.py | demand vs UCRA reservation vs static reservation |
+| fig_quantile_band.png | scripts/run_ucra.py | quantile fan chart (q05-q99) vs realized demand |
+| fig_self_evolution.png | scripts/run_ucra.py | rolling violations + Stage-5 update points |
+| fig_kappa_sweep.png | scripts/run_ucra.py --sweep | risk-utility frontier (kappa 0 to 2.0) |
+
+### Drift demo + CTTC pipeline - Zenodo 10610616
+
+| file | written by | content |
+|---|---|---|
+| fig_drift_demo.png | scripts/demo_evolution.py | frozen vs self-evolving policy under +35% demand surge |
+| drift_demo.json | scripts/demo_evolution.py | post-surge violations/utilization for both policies + Stage-5 update slots |
+| cttc_results.json | scripts/run_cttc_eval.py | per-slice policy comparison (operator / static_q90 / ucra_phi) + kappa sweep + QoS-gap fields |
+| fig_cttc_slices.png | scripts/run_cttc_eval.py | violation + utilization bars for all three policies, per slice |
+
+### Not committed (on purpose)
+
+| path | why | how to get it |
+|---|---|---|
+| model.pt | binary checkpoint | python scripts/train.py (about 3 min on CPU) |
+| scaler.npz | binary scaler state | written automatically by train.py / run_ucra.py |
+| data/** | 1+ GB of CC-BY datasets | python scripts/download_data.py (md5-verified) |
+
+## Reference numbers (the ones quoted in the root README and docs/)
+
+RAN (real commercial network, 1,778-slot segment, 252 test slots):
+- UCRA: 0.0% violations at 71.7% utilization, reservation error 10.8%
+- static_peak: 30.5% over-provisioning waste
+- mean_forecast: 50.4% of slots in violation
+- oracle: 16.3% violations
+- quantile coverage 96.0% at the 90% nominal level
+
+Drift demo (+35% surge, Stage-5 self-evolution active):
+- post-surge violations: frozen 26.5% -> self-evolving 11.6%
+- Stage-5 update slots: [96, 120, 144]
+
+CTTC multi-slice (violations per slice type):
+- URLLC: operator 29.0% -> ucra_phi 1.4%
+- eMBB:  operator 50.6% -> ucra_phi 0.0%
+- mMTC:  operator 5.4%  -> ucra_phi 4.4%
+
+Note: torch results can differ by a fraction of a percent across CPU and
+platform combinations (documented in docs/13_faq_troubleshooting.md). The
+numbers above are the published reference set.
+'''
+
+
+def patch_gitignore() -> None:
+    p = Path(".gitignore")
+    if not p.exists():
+        print("[warn] .gitignore not found - run this in the repo root (E:\\UCRA)")
+        sys.exit(1)
+    lines = p.read_text(encoding="utf-8").splitlines()
+    if any(ln.strip() == GI_LINE_NEW for ln in lines):
+        print("[skip] .gitignore already publishes outputs/ results")
+        return
+    out, hit_l = [], False
+    for ln in lines:
+        if ln.strip() == GI_LINE_OLD:
+            out.append(GI_LINE_NEW)
+            hit_l = True
+        elif ln.strip() == GI_COMMENT_OLD:
+            out.append(GI_COMMENT_NEW)
+        else:
+            out.append(ln)
+    if hit_l:
+        print("[ok] .gitignore: outputs/ results now publishable "
+              "(model.pt + scaler.npz still ignored)")
+    else:
+        out += ["", GI_COMMENT_NEW, GI_LINE_NEW]
+        print("[ok] .gitignore: appended publish block")
+    p.write_bytes(("\n".join(out) + "\n").encode("utf-8"))
+
+
+def write_manifest() -> None:
+    out = Path("outputs")
+    out.mkdir(parents=True, exist_ok=True)
+    data = MANIFEST.encode("utf-8")
+    (out / "README.md").write_bytes(data)
+    print("[ok] outputs/README.md manifest written "
+          "({:,} bytes, md5 {})".format(len(data),
+                                        hashlib.md5(data).hexdigest()[:8]))
+
+
+def check_artifacts() -> int:
+    out = Path("outputs")
+    found, missing = [], []
+    for name, src, what in EXPECTED:
+        f = out / name
+        if f.exists() and f.stat().st_size > 0:
+            found.append((name, f.stat().st_size))
+        else:
+            missing.append((name, src))
+    print("")
+    print("  artifact check ({}/{} present)".format(len(found), len(EXPECTED)))
+    for name, size in found:
+        print("    [found]   {:<32} {:>9,} bytes".format(name, size))
+    for name, src in missing:
+        print("    [missing] {:<32} run: {}".format(name, src))
+    for extra in ("model.pt", "scaler.npz"):
+        if (out / extra).exists():
+            print("    [kept out] {:<30} regenerable binary (ignored by design)"
+                  .format(extra))
+    return len(missing)
+
+
+def main() -> None:
+    print("=" * 66)
+    print(" UCRA outputs publisher -- commit results to GitHub")
+    print("=" * 66)
+    if not Path("ucra").is_dir() or not Path("scripts").is_dir():
+        print("[abort] repo root not detected - cd to E:\\UCRA first")
+        sys.exit(1)
+    patch_gitignore()
+    write_manifest()
+    n_missing = check_artifacts()
+    print("")
+    if n_missing == len(EXPECTED):
+        print("  NOTE: no artifacts found yet - run the pipeline first:")
+        print("    python scripts/audit_data.py")
+        print("    python scripts/train.py")
+        print("    python scripts/run_ucra.py --sweep")
+        print("  then re-run this script.")
+    print("-" * 66)
+    print("  next: push to GitHub (PowerShell 5.1 - one command per line):")
+    print("")
+    print("    git add -A")
+    print("    git commit -m \"results: publish experiment artifacts "
+          "(figures + JSON + CSV)\"")
+    print("    git push")
+    print("")
+    print("  after the push, outputs/ on GitHub will show every figure and")
+    print("  result file backed by outputs/README.md.")
+    print("=" * 66)
+
+
+if __name__ == "__main__":
+    main()

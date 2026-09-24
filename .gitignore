@@ -14,8 +14,8 @@ dist/
 venv/
 .env
 
-# --- experiment outputs ---
-outputs/
+# --- experiment outputs: keep results + figures, ignore binaries ---
+outputs/scaler.npz
 runs/
 *.pt
 *.pth
