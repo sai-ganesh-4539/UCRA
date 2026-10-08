@@ -1,0 +1,23 @@
+{
+  "shift": 0.35,
+  "surge_start_slot": 37,
+  "n_test": 252,
+  "capacity": 143954.525,
+  "frozen": {
+    "viol_overall": 0.2261904761904762,
+    "viol_post_surge": 0.2651162790697674,
+    "utilization_post_surge": 0.827363229185015,
+    "updates": 0
+  },
+  "evolving": {
+    "viol_overall": 0.0992063492063492,
+    "viol_post_surge": 0.11627906976744186,
+    "utilization_post_surge": 0.8031461802042449,
+    "updates": 3,
+    "update_points": [
+      96,
+      120,
+      144
+    ]
+  }
+}
