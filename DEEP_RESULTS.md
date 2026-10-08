@@ -175,25 +175,26 @@ Your test-half results (violations):
 
 | slice | operator | static_q90 | **ucra_phi** |
 |---|---|---|---|
-| URLLC | 29.0% | 15.2% | **1.4%** |
-| eMBB | 50.6% | 12.2% | **0.0%** |
-| mMTC | 5.4% | 12.2% | **4.4%** |
+| URLLC | 26.2% | 9.9% | **1.0%** |
+| eMBB | 44.2% | 5.3% | **1.2%** |
+| mMTC | 5.4% | 11.4% | **1.6%** |
 
 Over-provisioning (mean unused share of the reservation):
-ucra_phi 0.804 / 0.741 / 0.823 for URLLC/eMBB/mMTC — the honest cost of
+ucra_phi 0.836 / 0.782 / 0.844 for URLLC/eMBB/mMTC — the honest cost of
 near-zero violations on snapshot data with heavy right tails.
 
 Reading the table:
 
 - The operator's static `delta` sizing violates URLLC (the strictest
-  slice) in ~1 of 3.5 snapshots and eMBB half the time — this is the
+  slice) in ~1 of 4 snapshots and eMBB nearly half the time — this is the
   "static reservations are fragile" evidence.
 - static_q90 cuts violations but is a blunt constant: it cannot adapt to
-  where in the distribution today's load sits; URLLC still violates 15.2%.
-- ucra_phi's per-snapshot buffer is what buys 1.4% / 0.0%.
-- mMTC (4.4%) is the one slice where Phi does not dominate everything:
-  its offered distribution is heavy-tailed and spiky; the kappa sweep in
-  the same JSON shows the frontier if you want mMTC violations lower.
+  where in the distribution today's load sits; URLLC still violates 9.9%.
+- ucra_phi's per-snapshot buffer is what buys 1.0% / 1.2%.
+- mMTC (1.6%): in the first partial-data run (120 snapshots) this was
+  the stubborn slice at 4.4%; on the full 250-snapshot set Phi dominates
+  here too. Its offered distribution stays heavy-tailed and spiky -- the
+  kappa sweep in the same JSON shows the frontier for tighter mMTC sizing.
 
 `operator_qos_gap` fields (kept in the JSON, not headline material):
 mean drop-ratio and delay for operator-violated vs ok snapshots — the

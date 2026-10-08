@@ -74,16 +74,16 @@ high utilization: static over-reservation wastes ~30% of capacity, and naive
 mean forecasting violates half of all slots. The kappa sweep
 (`outputs/fig_kappa_sweep.png`) traces the full risk-utility frontier.
 
-### Stage 2-3 on CTTC slices (Zenodo 10610616, 120 snapshots, 70/30 split)
+### Stage 2-3 on CTTC slices (Zenodo 10610616, 250 snapshots, 70/30 split)
 
 Per-slice-type empirical offered-load quantiles feed the same Phi transform;
 policies are compared on held-out snapshots (`scripts/run_cttc_eval.py`):
 
 | Slice | Operator (static delta) | Static q90 | UCRA (Phi) |
 |---|---|---|---|
-| URLLC | 29.0% violations | 15.2% | **1.4%** |
-| eMBB | 50.6% violations | 12.2% | **0.0%** |
-| mMTC | 5.4% violations | 12.2% | **4.4%** |
+| URLLC | 26.2% violations | 9.9% | **1.0%** |
+| eMBB | 44.2% violations | 5.3% | **1.2%** |
+| mMTC | 5.4% violations | 11.4% | **1.6%** |
 
 Static delta sizing misses URLLC/eMBB demand spikes; the risk-aware
 transform holds near-zero violations in exchange for over-provisioning

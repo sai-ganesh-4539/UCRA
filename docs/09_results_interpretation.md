@@ -68,35 +68,35 @@ Details that make the claim defensible (doc 06 decodes the mechanism):
    mechanics (24-slot cadence, 96-slot rolling window, 0.15 threshold) --
    you can hand-derive them; a reviewer can too (doc 06 section 6).
 
-## 3. CTTC slice-level eval (run_cttc_eval.py, 120 snapshots, 70/30)
+## 3. CTTC slice-level eval (run_cttc_eval.py, 250 snapshots, 70/30)
 
 | Slice | n (test) | operator | static_q90 | ucra_phi |
 |---|---|---|---|---|
-| URLLC | 276 | 29.0% viol / 56.1% util / 43.9% over | 15.2% / 46.6% / 53.4% | **1.4%** / 19.6% / 80.4% |
-| eMBB | 164 | 50.6% / 78.2% / 21.8% | 12.2% / 56.7% / 43.3% | **0.0%** / 25.9% / 74.1% |
-| mMTC | 296 | 5.4% / 15.3% / 84.7% | 12.2% / 30.6% / 69.4% | **4.4%** / 17.7% / 82.3% |
+| URLLC | 577 | 26.2% viol / 50.8% util / 49.2% over | 9.9% / 38.7% / 61.3% | **1.0%** / 16.4% / 83.6% |
+| eMBB | 337 | 44.2% / 73.0% / 27.0% | 5.3% / 41.0% / 59.0% | **1.2%** / 21.8% / 78.2% |
+| mMTC | 630 | 5.4% / 17.9% / 82.1% | 11.4% / 36.8% / 63.2% | **1.6%** / 15.6% / 84.4% |
 
 (Each cell: violation_rate / utilization / over_provision, all as defined
 in doc 08 but computed on the slice rows.)
 
-- **operator (delta sizing)** under-reserves URLLC (29.0%) and eMBB
-  (50.6%) badly, while over-provisioning mMTC by 84.7% of its reservation.
+- **operator (delta sizing)** under-reserves URLLC (26.2%) and eMBB
+  (44.2%) badly, while over-provisioning mMTC by 82.1% of its reservation.
   That asymmetry -- failing the strict slices while wasting on the loose
   one -- is exactly the static-sizing failure mode UCRA targets.
 - **static_q90** (Phi with kappa=0): big improvement over operator on
-  URLLC/eMBB but still 12-15% violations -- a bare quantile is not enough
+  URLLC/eMBB but still 5-11% violations -- a bare quantile is not enough
   in the tail.
-- **ucra_phi**: 1.4% / 0.0% / 4.4% violations. The cost: over-provision
-  ~74-82% of the reservation (note: relative to R, not to capacity), i.e.
-  utilization 18-26%. Read as: near-zero violations bought at high slack
+- **ucra_phi**: 1.0% / 1.2% / 1.6% violations. The cost: over-provision
+  ~78-84% of the reservation (note: relative to R, not to capacity), i.e.
+  utilization 16-22%. Read as: near-zero violations bought at high slack
   per slice. The kappa_sweep block inside cttc_results.json gives you the
   intermediate operating points per slice -- use it to argue per-slice
   kappa (tight for mMTC, loose for URLLC).
-- **mMTC nuance worth stating honestly:** operator (5.4%) beats static_q90
-  (12.2%) here, because the dataset's mMTC delta reservations are already
-  generous relative to that slice's spiky-but-tiny loads. UCRA (4.4%)
-  edges out both, but the headline story on mMTC is "comparable
-  violations", not "big win".
+- **mMTC nuance worth stating honestly:** operator (5.4%) still beats
+  static_q90 (11.4%) here, because the dataset's mMTC delta reservations
+  are already generous relative to that slice's spiky-but-tiny loads. UCRA
+  (1.6%) now clearly beats both, but from an already-low 5.4% baseline --
+  the headline win on mMTC is modest next to URLLC/eMBB.
 - **QoS gap fields** (`operator_qos_gap` in the JSON): mean packet-drop
   ratio and delay on slots where the operator's reservation was violated
   vs not. They are per-sample aggregates in this dataset, so treat them as
@@ -122,7 +122,7 @@ MAY claim, backed directly by your outputs:
   drift and autonomously reduces violations by ~56% relative without extra
   capacity.
 - On independent slice snapshots (CTTC), Phi-based sizing reduces
-  operator-style violations from 29-51% to 0-4.4% on URLLC/eMBB at
+  operator-style violations from 26-44% to 1.0-1.2% on URLLC/eMBB at
   controlled over-provisioning.
 - Every stage ran with zero manual intervention and no test-set peeking
   (the oracle baseline exists precisely to quantify that).

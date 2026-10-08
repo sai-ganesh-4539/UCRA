@@ -116,8 +116,8 @@ the same checkpoint: frozen (Stages 1-4) vs self-evolving (Stage 5 on).
 Writes `outputs/fig_drift_demo.png` + `outputs/drift_demo.json`.
 
 ### `python scripts/download_data.py --cttc` then
-### `python scripts/run_cttc_eval.py --config configs/default.yaml --max-samples 120`
-Parses 120 CTTC steady-state snapshots (271 MB dataset, ~2,908 slice rows),
+### `python scripts/run_cttc_eval.py --config configs/default.yaml`
+Parses 250 CTTC steady-state snapshots (271 MB dataset, ~5,547 slice rows),
 splits snapshots 70/30, and compares three reservation policies per slice
 type on held-out snapshots: `operator` (the dataset's own delta sizing),
 `static_q90` (train-half q90 of offered load), `ucra_phi` (the Phi
@@ -179,4 +179,4 @@ allocation sum <= R, all 4 metrics present, replay fine-tune returns
 | run_ucra (+sweep) | ~20 s |
 | demo_evolution | ~1 min |
 | download CTTC | one-time 271 MB (resumable) |
-| run_cttc_eval --max-samples 120 | ~2-4 min (parsing dominates) |
+| run_cttc_eval (250 samples) | ~4-8 min (parsing dominates) |

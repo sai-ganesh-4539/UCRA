@@ -13,7 +13,7 @@ the authoritative numbers:
 This script patches every stale CTTC figure in README.md, the four
 DEEP_*.md guides and the affected docs/ guides. Nothing else is touched.
 
-Run it from the repo root (E:\UCRA):
+Run it from the repo root (E:/UCRA):
     python sync_cttc_docs.py
 
 Safe to re-run: already-patched files are skipped.

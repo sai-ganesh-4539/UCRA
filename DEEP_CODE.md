@@ -169,7 +169,7 @@ python scripts/run_ucra.py --sweep
 python scripts/demo_evolution.py
 #   -> frozen vs evolving JSON; updates [96, 120, 144]
 python scripts/run_cttc_eval.py          # needs --cttc download first
-#   -> per-slice table: operator 29/50.6/5.4 vs ucra_phi 1.4/0.0/4.4
+#   -> per-slice table: operator 26.2/44.2/5.4 vs ucra_phi 1.0/1.2/1.6
 python scripts/make_figures.py           # optional: refresh figs from log
 python -m pytest tests/test_smoke.py -q  # green = pipeline intact
 ```

@@ -140,7 +140,7 @@ reserved = delta * link_cap        # link_cap = mean edge bandwidth
 ```
 
 Corrupt samples are skipped with a logged notice, never fatal. Your
-evaluation consumed **120 samples** (70/30 chronological split).
+evaluation consumed **250 samples** (70/30 chronological split).
 
 ### CTTC-specific caveat (documented in docs/07 + 09)
 

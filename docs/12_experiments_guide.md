@@ -12,14 +12,14 @@ python scripts/train.py        --config configs/default.yaml
 python scripts/run_ucra.py     --config configs/default.yaml --sweep
 python scripts/demo_evolution.py --config configs/default.yaml
 python scripts/download_data.py --cttc              # 271 MB, one-time
-python scripts/run_cttc_eval.py --config configs/default.yaml --max-samples 120
+python scripts/run_cttc_eval.py --config configs/default.yaml  # default 250
 python -m pytest tests/test_smoke.py -q
 ```
 
 Expected (your reference machine): 302,052 rows / 75 sectors; segment 1,778
 slots; capacity 143,954.5; 52,252 params; coverage ~93-96%; UCRA 0.0% viol /
-71.7% util / 10.8% res-err; demo updates [96, 120, 144]; CTTC URLLC 1.4% /
-eMBB 0.0% / mMTC 4.4%. Tolerances: coverage +-3 points and small metric
+71.7% util / 10.8% res-err; demo updates [96, 120, 144]; CTTC URLLC 1.0% /
+eMBB 1.2% / mMTC 1.6%. Tolerances: coverage +-3 points and small metric
 drift across torch versions/platforms (doc 03 section 7). Everything else
 (Stages 2-4, baselines math) is deterministic given pred_q.
 
@@ -102,8 +102,8 @@ this data: coverage 93-96%, UCRA violations stay 0.0%, utilization
 1. `python scripts/download_data.py --ran-all` + a loop over
    data.ran.subset in {dataset01, dataset02, dataset03} -- three networks
    instead of one (03 is 709 MB).
-2. `--max-samples 250` on CTTC (the parser is linear; doubles the test
-   rows).
+2. DONE: the default CTTC run now parses 250 samples -- doc 09's numbers
+   already reflect this (up from 120 in the first partial-data run).
 3. Dataset_02/03 have different sector counts and possibly 2G files -- the
    loader handles both automatically (tech-aware mapping).
 

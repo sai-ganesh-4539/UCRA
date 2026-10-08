@@ -4,7 +4,7 @@
 
 | Paper section | Content | Source in repo |
 |---|---|---|
-| Abstract | 5-stage closed loop; real RAN: 0% viol @ 71.7% util; drift: -56% relative violations; CTTC slices: 29-51% -> 0-4.4% | README results; doc 09 |
+| Abstract | 5-stage closed loop; real RAN: 0% viol @ 71.7% util; drift: -56% relative violations; CTTC slices: 26-44% -> 1.0-1.6% | README results; doc 09 |
 | 1 Introduction | reservation dilemma; uncertainty as first-class input; contributions list | doc 01 sections 1-2 |
 | 2 Related work | static sizing, point-forecast policies, quantile forecasting, continual learning; **naming-collision sentence below** | docs/METHODOLOGY.md; doc 01 section 6 |
 | 3 Methodology | the five stages + feedback; equations 1-5 = phi_transform, update_reservation, rho_t, weights, trigger | docs 03-06; diagram in doc 01 section 3 |

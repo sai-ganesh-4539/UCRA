@@ -13,7 +13,7 @@ Datasets are NOT committed to git (`.gitignore` hard-excludes `data/`).
 | Feeds stages | 1 (uncertainty), 4 (update), 5 (evolution) | 2-3 (reservation sizing vs violations) |
 | Feedback signals | utilization, violations | violations, drops, delay |
 | Temporal drift | yes (real days/weeks) | no (i.i.d. snapshots) |
-| Headline metric | violation 0.0% @ util 71.7% | URLLC 29%->1.4%, eMBB 50.6%->0% |
+| Headline metric | violation 0.0% @ util 71.7% | URLLC 26%->1.0%, eMBB 44%->1.2% |
 
 Together they cover all five UCRA stages; neither alone could (one has no
 slice semantics, the other has no time axis).
@@ -92,9 +92,11 @@ the dataset's class under the correct name `DatanetAPI` (capital D -- the
 lowercase import was bug #1, fixed in Part C). Corrupt samples are skipped
 with a printed note instead of aborting the run.
 
-Your parse: 120 samples -> frame (2,908 rows, 8 cols); slice counts
-mMTC 1,201 / URLLC 1,106 / eMBB 601; test split (samples > 70% cut) yields
-URLLC n=276, eMBB n=164, mMTC n=296 -- the n's in your results JSON.
+Your parse: 250 samples -> frame (5,547 rows, 8 cols); slice counts
+mMTC 2,304 / URLLC 2,048 / eMBB 1,195; test split (samples > 70% cut) yields
+URLLC n=577, eMBB n=337, mMTC n=630 -- the n's in your results JSON.
+(An earlier partial-download run parsed 120 samples / n=276,164,296; the
+full-dataset numbers used everywhere in the docs supersede it.)
 
 ## 4. Synthetic generator (`ucra/data/synthetic.py`)
 

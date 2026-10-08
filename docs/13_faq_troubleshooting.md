@@ -48,8 +48,9 @@ A: `DatanetAPI` (capital D). The lowercase import was a real bug we hit and
 fixed in Part C.
 
 **Q: CTTC eval is slow / memory heavy.**
-A: Parsing dominates; use `--max-samples 120` (your current setting). 250
-is the ceiling we consider "plenty" (doc 12 section 9).
+A: Parsing dominates; the reference numbers use the default 250 samples
+(considered "plenty", doc 12 section 9). Use `--max-samples 100` for a
+quick pass -- numbers shift slightly with fewer snapshots.
 
 ## Training (Stage 1)
 
