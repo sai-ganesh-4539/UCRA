@@ -115,13 +115,13 @@ Stage-5 fired exactly 3 times: slots **[96, 120, 144]**.
 | oracle (knows tomorrow) | 16.3% | lower bound |
 | **UCRA** | **0.0% @ 71.7% util** | only policy with both ✓ |
 
-**CTTC multi-slice (120 snapshots, operator vs UCRA):**
+**CTTC multi-slice (250 snapshots, operator vs UCRA):**
 
 | slice | operator | static q90 | **ucra_phi** |
 |---|---|---|---|
-| URLLC | 29.0% | 15.2% | **1.4%** |
-| eMBB | 50.6% | 12.2% | **0.0%** |
-| mMTC | 5.4% | 12.2% | **4.4%** |
+| URLLC | 26.2% | 9.9% | **1.0%** |
+| eMBB | 44.2% | 5.3% | **1.2%** |
+| mMTC | 5.4% | 11.4% | **1.6%** |
 
 Kappa sweep (0 → 2.0) traces the full risk-utility frontier in `outputs/fig_kappa_sweep.png`.
 
