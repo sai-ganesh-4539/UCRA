@@ -1,0 +1,45 @@
+\begin{abstract}
+Network slicing promises logically isolated, service-tailored virtual
+networks on shared 5G infrastructure, but its operation hinges on a
+question that is usually answered crudely: how much capacity should a
+slice reserve for the next interval when future demand is uncertain?
+Over-reservation wastes spectrum that other tenants could monetize;
+under-reservation violates service-level agreements and degrades
+user experience. Existing approaches occupy two unattractive extremes:
+static margins sized from peak historical load, which waste 30\% or
+more of capacity, and end-to-end learned controllers, whose policies
+are opaque, hard to audit, and brittle under distribution shift. This
+paper presents UCRA (Uncertainty-to-Reservation Closed-Loop Resource
+Allocation), a five-stage framework that turns calibrated probabilistic
+demand forecasts into capacity reservations through an explicit,
+auditable transform $\Rt = \qtau + \kappa\,\spread\,(1 + w\,\rhot)$,
+where $\qtau$ is a deep quantile forecast, $\spread$ its dispersion,
+$\rhot$ an online risk indicator, and $\kappa$ a single operator-facing
+risk dial. A self-evolving stage detects drift from reservation
+feedback and fine-tunes the forecaster on a reservoir replay buffer
+under a formally causal information-flow protocol that we prove and
+enforce in tests: the model can only learn from labels that would
+already exist in a live deployment. On three weeks of live 5G/4G/2G
+radio access network performance counters (302{,}052 records, 75
+sectors), UCRA holds \textbf{0.0\% reservation violations at 72.1\%
+utilization} and 10.7\% waste, where a peak-sized static reservation
+wastes 30.5\%, a median-forecast policy violates 48.0\% of intervals,
+and even a cheating oracle quantile still violates 16.3\%. A
+three-seed study confirms stability (0.0\% violations in every seed;
+utilization $67.6\%\pm3.4$). Under an injected $+35\%$ demand surge,
+the causal self-evolving loop cuts post-surge violations by half
+($34.3\%\pm5.9 \rightarrow 17.2\%\pm4.9$ across seeds) relative to a
+frozen forecaster, while firing zero spurious updates on clean data. On
+an independent CTTC 5G slicing workload (229 steady-state snapshots),
+the same transform reduces slice reservation violations to 1.2--2.7\%
+across URLLC, eMBB, and mMTC where the operator's default sizing
+violates 5.8--43.7\%. The full pipeline --- data ingestion, training,
+closed-loop evaluation, leakage audit, and three-seed verification ---
+is open and reproducible from the accompanying repository.
+\end{abstract}
+
+\begin{IEEEkeywords}
+5G network slicing, resource reservation, quantile regression, deep
+learning, uncertainty quantification, online learning, concept drift,
+replay buffers, risk management, reproducibility.
+\end{IEEEkeywords}

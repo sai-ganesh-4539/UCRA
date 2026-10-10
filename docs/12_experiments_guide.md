@@ -73,29 +73,36 @@ experiment on CTTC data, build risks from the frame, e.g.
 per-sample aggregate reservation across the three slice demands. One
 afternoon of work; makes Stage 3 non-trivial in the paper.
 
-## 7. Train-only Phi variant for CTTC (removes the rho caveat)
+## 7. Train-only Phi variant for CTTC (removes the rho caveat) -- DONE
 
-In `scripts/run_cttc_eval.py`, either set `phi.rho_weight = 0` for a fourth
-policy run, or add:
+`scripts/run_cttc_eval.py` now ships BOTH fixes:
 
-```python
-def phi_empirical_clean(hist, phi_cfg):
-    q50  = float(np.quantile(hist, 0.5)); q_tau = float(np.quantile(hist, phi_cfg["base_tau"]))
-    q99  = float(np.quantile(hist, 0.99)); spread = max(q99 - q50, 1e-9)
-    return q_tau + phi_cfg["kappa"] * spread          # rho = 0, train-only
-```
+- a fourth policy `phi_train_only` (R = q90_train + kappa * spread_train,
+  constant, no online term) reported next to ucra_phi;
+- a CAUSAL online rho: `phi_empirical_causal` sizes the reservation from
+  train quantiles + rho from PREVIOUSLY SERVED test samples only
+  (UncertaintyState, same as the RAN loop). Earlier versions fed the
+  current sample's offered load into rho - outcome leakage, fixed.
 
-Report it as "Phi (train-only)" next to ucra_phi; the gap between the two
-isolates the stress-modulation term.
+Verified causal numbers (229 snapshots retained from 250 parsed; the
+loader skips corrupt samples): ucra_phi violations URLLC 1.23% / eMBB
+1.90% / mMTC 2.65% at 18.4-21.4% utilization; ucra_phi ~= phi_train_only
+on this dataset (rho stays near zero on i.i.d.-like snapshots) - the
+kappa buffer, not the risk modulation, drives the CTTC result. Say so in
+the paper.
 
-## 8. Seeds and variance (do this before the paper)
+## 8. Seeds and variance (do this before the paper) -- DONE
 
-`run_ucra.py` seeds everything from cfg.seed, but torch kernels differ
-across builds, so: pick 3 seeds (41, 42, 43), rerun train + run_ucra for
-each (rename outputs/ between runs), report mean +- sd for coverage,
-violation, utilization. Stages 2-4 need no reseeding. Typical spread on
-this data: coverage 93-96%, UCRA violations stay 0.0%, utilization
-+-1-2 points.
+`scripts/run_seeds.py` automates the whole study (seeds from
+`eval.seeds`, default 41/42/43): per seed it trains a fresh Stage-1 model
+into outputs/seed_<s>/, runs the causal closed loop + kappa sweep + causal
+drift demo, and aggregates mean +- sd into outputs/seed_aggregate.json.
+
+Verified 3-seed results: q05-q99 coverage 93.7% +- 3.8; UCRA clean-RAN
+violations 0.0% in all seeds (utilization 67.6% +- 3.4); evolution
+updates on the clean window 0 in all seeds (trigger discipline);
+drift-demo post-surge violations frozen 34.3% +- 5.9 vs evolving
+17.2% +- 4.9 with first updates at [96, 120, 144] in every seed.
 
 ## 9. Broadening the evidence base (optional, ranked by value/effort)
 

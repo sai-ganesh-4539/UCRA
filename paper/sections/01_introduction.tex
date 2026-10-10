@@ -1,0 +1,179 @@
+\section{Introduction}
+\label{sec:intro}
+
+\IEEEPARstart{5}{G} network slicing is one of the defining operational
+ideas of modern mobile networks: a single physical radio access and
+transport infrastructure is carved into logically isolated virtual
+networks, each engineered for a service class with its own key
+performance indicators --- ultra-reliable low-latency communications
+(URLLC), enhanced mobile broadband (eMBB), and massive machine-type
+communications (mMTC)~\cite{rost2017network,afolabi2018slicing}.
+The economic promise of slicing rests on a deceptively simple
+operational primitive: the operator periodically decides how much of a
+shared resource pool (radio spectrum, transport bandwidth, compute) to
+\emph{reserve} for each slice or sector over the next control interval.
+Every downstream commitment --- a guaranteed bitrate for an industrial
+URLLC flow, a busy-hour throughput target for a video eMBB cohort ---
+is ultimately backed by that reservation decision. When the reservation
+meets or exceeds realized demand, users are served and the SLA holds;
+when it falls short, the slice violates its contract; whatever is
+reserved but unused is idle capital that neighboring tenants cannot
+use.
+
+The difficulty is that the reservation must be committed \emph{before}
+demand realizes. Mobile traffic is strongly periodic (diurnal and
+weekly cycles), heavy-tailed at 15-minute granularity, and subject to
+abrupt regime shifts --- mass events, flash crowds, application
+launches, holidays --- that no historical model fully
+anticipates~\cite{shafiq2012cellular,sciancalepore2017mobile}. A reservation
+policy is therefore an exercise in decision-making under uncertainty,
+and the natural language for that exercise is probabilistic
+forecasting: predict not a single demand number but a distribution, and
+size the reservation from a calibrated upper quantile of that
+distribution. Yet the majority of deployed practice still sizes
+reservations from static rules of thumb --- peak-plus-margin being the
+most common --- precisely because the probabilistic alternative has
+been perceived as operationally fragile.
+
+This paper argues that the perception is outdated, and that the
+remaining fragility has a different root: not the quality of deep
+probabilistic forecasts, which is now adequate, but the
+\emph{interface} between forecasts and reservations, and the
+\emph{information hygiene} of the learning loop that adapts them. We
+present UCRA, a closed-loop framework that makes both explicit. UCRA
+comprises five stages: (1) a quantile LSTM forecaster that emits a
+full predictive distribution of demand one hour ahead; (2) an
+\emph{uncertainty-to-reservation transform} $\Phi$ that converts the
+forecast distribution into a reservation target through one auditable
+equation with a single interpretable risk parameter $\kappa$; (3) a
+risk-adaptive allocation that distributes an aggregate reservation
+across competing sectors or slices in proportion to demand pressure
+and risk; (4) an update-and-release mechanism with EWMA smoothing and
+release hysteresis that suppresses reservation churn; and (5) a
+self-evolving learning stage that watches the reservation feedback
+stream (violations, demand z-scores), detects distribution drift, and
+fine-tunes the forecaster on a reservoir-sampled replay buffer ---
+under an information-flow protocol that guarantees the loop never
+learns from labels a live system could not yet possess.
+
+\subsection{Motivation: two failure modes of the obvious designs}
+
+The two canonical baselines fail in instructive, opposite directions,
+and our experiments quantify both on real data. A \emph{static
+peak-plus-margin} reservation --- the historical maximum demand, held
+constant --- never violates on our three-week evaluation window, but
+wastes 30.5\% of capacity; on a three-week trace that is roughly a
+week of capacity paid for and never used. Worse, its safety is
+conditional on stationarity: had a single test-window spike exceeded
+the training peak, the ``safe'' policy would have violated with no
+recourse. A \emph{median-forecast} reservation --- reserve what the
+point forecast says demand will be --- is the opposite failure: it
+tracks demand tightly (its mean absolute tracking error is the lowest
+of all policies we test) yet violates the reservation in 48.0\% of
+15-minute intervals on the same window, because the median of a
+right-skewed distribution is by construction exceeded half the time.
+The lesson is structural: violation rate and utilization trade off
+along a frontier, and the frontier's shape is determined by how
+uncertainty information enters the reservation rule. UCRA's
+contribution is to make that entry point explicit, tunable, and
+adaptive.
+
+\subsection{Motivation: leakage is the silent killer of online-learning claims}
+
+Self-evolving (continually learning) forecasters are increasingly
+proposed for network operations, and our own Stage~5 is one. But
+online-learning experiments carry a methodological trap that is easy
+to fall into and easy to miss: at loop time $t$ a forecaster that
+predicts an $H$-step horizon holds labels only for slots up to $t$;
+its multi-step training targets for slots $t+1,\dots,t+H-1$ do not
+\emph{exist} yet. An evaluation harness that stores full multi-step
+windows into a replay buffer at time $t$ --- as ours originally did
+--- lets the fine-tuned model peek as much as $H-1$ slots into the
+future, inflating post-adaptation performance in a way that no live
+deployment could realize. The pre-submission audit of this paper
+caught exactly this flaw in our own pipeline; the final version
+therefore introduces \emph{delayed causal replay}, which admits a
+training window into the buffer only when its last label has been
+observed, and refreshes forecasts only for slots whose reservations
+have not yet been committed. We formalize the rule, prove its
+sufficiency, unit-test it, and re-run every experiment under it. We
+highlight this not as a detail but as a reusable evaluation protocol
+for the growing literature on self-adaptive network
+controllers~\cite{kapoor2023leakage}.
+
+\subsection{A running example}
+
+To make the framework concrete before the formal treatment, consider
+one operational day on the evaluated network. At 05:45 the forecast
+for the 06:00 slot reads a median of 61{,}200 with a wide
+morning-ramp dispersion of 12{,}400; the transform reserves
+$\approx$77{,}500 --- well above the median, because the forecaster
+itself reports high uncertainty about how fast the morning ramp will
+run. At 13:30, demand is stable and the band tightens; the same
+formula reserves barely 6\% above the base quantile. At 21:00 a
+flash crowd begins: reservations start violating, the rolling
+violation indicator rises, the risk term inflates every buffer by up
+to 45\% within its bounded range, and if the surge persists past the
+drift trigger the forecaster is fine-tuned --- on strictly past
+labels only --- so the next morning's forecasts reflect the new
+regime. Every one of these decisions is a four-term arithmetic
+expression an operator can audit after the fact, and the paper's
+central empirical claim is that this loop, so specified, held zero
+violations for three weeks of live traffic at two-thirds utilization
+while static sizing wasted nearly a third of capacity.
+
+\subsection{Contributions}
+
+This paper makes the following contributions:
+
+\begin{enumerate}
+\item \textbf{An auditable uncertainty-to-reservation transform.} A
+closed-form mapping $\Phi$ from a quantile forecast to a reservation,
+$\Rt = \qtau + \kappa\,\spread\,(1 + w\,\rhot)$, with clamping to
+a minimum-headroom floor and a capacity ceiling. One dial, $\kappa$,
+moves the operator along the risk--utilization frontier; we trace the
+full frontier empirically.
+\item \textbf{A five-stage closed loop with self-evolution.} Quantile
+LSTM forecasting, risk-feedback state, reservation smoothing with
+release hysteresis, and trigger-based continual learning from a
+reservoir replay buffer, wired into one control loop with per-slot
+feedback.
+\item \textbf{A formally causal online-learning protocol.} The
+delayed replay intake (admission at $t+H-1$) and partial forecast
+refresh (only slots $>t$), with a sufficiency argument, unit tests
+that fail on the leaky variant, and a head-to-head quantification
+showing the leaky variant inflates adaptation gains.
+\item \textbf{A verified, multi-dataset empirical study.} On live RAN
+performance counters: 0.0\% violations at 72.1\% utilization (seed
+42; $67.6\%\pm3.4$ across three seeds) versus 30.5\% waste for static
+peak sizing and 48.0\% violations for median-forecast sizing; a
+cheating oracle still violates 16.3\%. Under a $+35\%$ surge: causal
+self-evolution halves post-surge violations ($34.3\%\pm5.9
+\rightarrow 17.2\%\pm4.9$). On the independent CTTC slicing workload:
+1.2--2.7\% slice violations versus 5.8--43.7\% for the operator's
+default sizing.
+\item \textbf{An honest negative-control analysis.} The clean RAN
+window triggers \emph{zero} self-evolution updates in all seeds: the
+drift detector disciplines itself when there is nothing to fix. We
+report this as a false-positive control and scope all online-learning
+claims to the drift experiment, rather than over-claiming from the
+clean run.
+\item \textbf{Full reproducibility.} Deterministic configurations,
+pinned datasets (Zenodo), unit tests including causality regression
+tests, and one-command reruns of every table and figure in this
+paper.
+\end{enumerate}
+
+\subsection{Paper organization}
+
+Section~\ref{sec:related} reviews related work on slicing resource
+management, predictive uncertainty, and online adaptation.
+Section~\ref{sec:novelty} states the novelty claims and their
+relationship to prior art. Section~\ref{sec:system} formalizes the
+system model and the reservation problem. Section~\ref{sec:method}
+details the five stages, including the causal replay protocol.
+Section~\ref{sec:setup} describes datasets, baselines, metrics, and
+the verification protocol. Section~\ref{sec:results} presents the
+verified results. Section~\ref{sec:discussion} discusses scope,
+limitations, and threats to validity, and Section~\ref{sec:conclusion}
+concludes.

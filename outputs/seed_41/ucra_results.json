@@ -1,0 +1,40 @@
+{
+  "ucra": {
+    "reservation_error": 0.15855468984777096,
+    "violation_rate": 0.0,
+    "utilization": 0.6389960792164214,
+    "waste": 0.15855468984777096
+  },
+  "static_peak": {
+    "reservation_error": 0.3046021652312987,
+    "violation_rate": 0.0,
+    "utilization": 0.547524663283111,
+    "waste": 0.3046021652312987
+  },
+  "mean_forecast": {
+    "reservation_error": 0.023366887122392654,
+    "violation_rate": 0.4722222222222222,
+    "utilization": 0.9477541446685791,
+    "waste": 0.012196283787488937
+  },
+  "train_quantile_phi": {
+    "reservation_error": 0.3029006063535906,
+    "violation_rate": 0.0,
+    "utilization": 0.5489120952851347,
+    "waste": 0.3029006063535906
+  },
+  "oracle_quantile": {
+    "reservation_error": 0.2010344701505471,
+    "violation_rate": 0.1626984126984127,
+    "utilization": 0.6490303885022284,
+    "waste": 0.1948028377889572
+  },
+  "capacity": 143954.525,
+  "evolution_updates": 0,
+  "update_points": [],
+  "causal_replay": true,
+  "label_delay_slots": 3,
+  "replay_offered": 252,
+  "replay_released": 249,
+  "n_test": 252
+}

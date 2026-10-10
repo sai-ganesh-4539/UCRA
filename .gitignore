@@ -33,3 +33,6 @@ Thumbs.db
 # --- logs ---
 *.log
 wandb/
+
+site/.next/
+site/node_modules/

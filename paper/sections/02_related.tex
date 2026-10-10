@@ -1,0 +1,175 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Network Slicing and Resource Allocation}
+
+Network slicing has been studied extensively since its
+standardization in 5G, from architecture
+frameworks~\cite{rost2017network,afolabi2018slicing} to
+orchestration and lifecycle management~\cite{foukas2017networking}.
+Resource allocation for slices spans a wide methodological spectrum.
+At the static end, operators size slices from engineering rules and
+peak-load studies; these approaches are transparent and stable but
+cannot track demand dynamics, and empirical studies repeatedly report
+substantial over-provisioning as the price of
+SLA safety~\cite{sciancalepore2017mobile}. At the dynamic end,
+optimization-based approaches formulate slice embedding, scaling, or
+admission as integer programs solved on rolling
+horizons~\cite{yu2008rethinking}, and learning-based approaches
+train reinforcement-learning agents to adjust slice resources from
+feedback~\cite{wang2017intelligent,bega2019deepcog}. RL-based slice controllers
+can in principle discover policies beyond human design, but they
+raise adoption barriers that this paper takes seriously: the policy
+is a black box whose failure modes are hard to audit, the training is
+sample-hungry on infrastructure where exploration is costly, and the
+learned controller is notoriously sensitive to distribution shift.
+UCRA deliberately positions itself between the extremes: the forecast
+is learned, but the decision layer is a single closed-form transform
+that an operator can read, clamp, and reason about, in the spirit of
+interpretable control for safety-critical
+infrastructure~\cite{rudin2019stop}.
+
+\subsection{Demand Prediction for Network Operations}
+
+Traffic prediction has a long history in networking, from
+classical time-series models~\cite{box2015time} to deep sequence
+models. Recurrent architectures, and LSTMs in
+particular~\cite{hochreiter1997lstm}, remain strong, well-understood
+baselines for 15-minute to hourly network demand forecasting, with
+convolutional and attention alternatives offering accuracy gains on
+dense multivariate settings~\cite{zhang2017deep}. Applications
+include cellular traffic forecasting for proactive
+scaling~\cite{zhang2019transfer}, capacity planning, and anomaly
+detection. Point forecasts, however, answer only part of the
+reservation question: committing capacity requires knowing how wrong
+the forecast can be. Probabilistic alternatives include Bayesian
+neural networks~\cite{gal2016dropout}, deep ensembles, and --- most
+directly relevant here --- \emph{quantile regression}, which trains a
+model to output several conditional quantiles simultaneously by
+minimizing the pinball (quantile) loss~\cite{koenker1978regression}.
+Quantile forecasts are standard in electricity markets and load
+serving~\cite{hong2016probabilistic} precisely because planners must
+commit resources against uncertain demand, and we import that
+tradition into slicing. Calibration --- whether the nominal 90\%
+interval actually covers ~90\% of outcomes --- is the property that
+makes such forecasts decision-grade, and we measure it explicitly
+(Section~\ref{sec:results-calibration}).
+
+\subsection{From Forecasts to Actions: Predictive Resource Management}
+
+Converting predictive uncertainty into resource decisions has been
+explored in cloud and network contexts. Forecast-driven autoscaling
+sizes server fleets from predicted load, with queueing-theoretic
+headroom rules~\cite{gandhi2012autoscale};
+probabilistic variants size from predicted demand
+distributions~\cite{ islam2012provisioning}. In wireless networks,
+predictive resource allocation uses traffic forecasts to pre-allocate
+PRBs, pre-warm carriers, or schedule sleep states. Closest in spirit
+to UCRA, measurement-based admission control sized capacity from
+recent traffic statistics with robustness
+guarantees~\cite{grossglauser1999adaptive}.
+Three gaps remain. First, most of this literature treats the
+forecast-to-action mapping as a fixed engineering constant (a safety
+factor), losing the connection between the operator's risk appetite
+and the frontier position. Second, the risk feedback loop --- using
+recent reservation outcomes to modulate the buffer --- is usually
+absent. Third, the evaluation rarely closes the loop: metrics are
+computed on forecast accuracy (pinball loss, coverage) rather than on
+the operational reservation outcomes (violations, utilization, waste)
+that the deployment actually cares about. UCRA addresses all three:
+$\Phi$ exposes a single risk dial $\kappa$ whose frontier we trace
+empirically; the risk indicator $\rhot$ closes the feedback loop
+inside the transform; and all reported metrics are closed-loop
+reservation outcomes on held-out windows.
+
+\subsection{Drift Detection and Continual Learning}
+
+Distribution shift is the normal condition of production networks:
+traffic mix evolves, events recur, application behavior changes.
+Drift detection is a mature field --- sequential tests such as
+Page's CUSUM and the Page--Hinkley test~\cite{page1954continuous},
+ADWIN's adaptive windowing~\cite{bifet2007learning}, and
+population-stability statistics are standard tools. On detection,
+continual-learning methods update the model without erasing prior
+competence; experience replay is the simplest and most robust family,
+and reservoir sampling~\cite{vitter1985random} maintains a uniform
+sample of history in a fixed-size buffer, which directly mitigates
+catastrophic forgetting~\cite{chaudhry2019continual,rolnick2019experience}.
+UCRA's Stage~5 combines a dual-trigger monitor (rolling reservation
+violation rate OR demand z-score) with reservoir replay and gentle
+fine-tuning. What is novel is not the ingredients but the
+\emph{contract}: a formally stated information-flow rule for what the
+updater is allowed to know, enforced in code and tested, motivated by
+the observation that online-learning evaluations routinely --- and
+often unknowingly --- grant the learner access to labels that do not
+yet exist, a special case of the leakage taxonomy of
+Kapoor and Narayanan~\cite{kapoor2023leakage}. Prequential
+evaluation~\cite{dawid1984present} formalizes the honest variant:
+predict-then-observe in strict temporal order; our protocol is the
+multi-step-horizon generalization of that principle for replay-based
+updaters.
+
+\subsection{Positioning Against Learned Slice Controllers}
+
+The closest learned-controller line of work is DeepCog
+\cite{bega2019deepcog}, which trains a deep network to output slice
+capacity demand forecasts that a downstream optimizer converts into
+slicing decisions, reporting large gains in resource efficiency on
+synthetic and emulated topologies; mobile-traffic-forecast-driven
+slicing utilization was likewise analyzed by Sciancalepore et
+al.~\cite{sciancalepore2017mobile}. UCRA differs in three deliberate
+ways. First, the forecast is \emph{probabilistic} (a full quantile
+vector) rather than a point estimate, so the uncertainty the decision
+layer must absorb is measured, not assumed. Second, the
+decision layer is an explicit equation with one risk parameter rather
+than a learned policy or an optimizer over a learned model --- weaker
+in raw fitting power, stronger in auditability, and immune to the
+distribution-shift brittleness that end-to-end controllers exhibit.
+Third, UCRA's evaluation protocol holds the \emph{online-learning
+component} to a causal information-flow contract
+(Section~\ref{sec:stage5}); learned-controller evaluations, including
+ours originally, rarely do, and Section~\ref{sec:leakage-audit}
+quantifies what that omission was worth in our own pipeline.
+
+\subsection{Uncertainty-Aware Provisioning in Adjacent Domains}
+
+The pattern that UCRA instantiates --- forecast a distribution, then
+commit a resource against a chosen quantile with an explicit risk
+dial --- is mature in adjacent domains, and the borrowings are
+deliberate. In electricity systems, probabilistic load forecasting
+has fed unit commitment and reserve sizing for a decade: system
+operators procure spinning reserve against forecast quantiles, and
+the literature treats calibration as a procurement-relevant property
+exactly as we treat coverage here~\cite{hong2016probabilistic}. In
+cloud capacity management, AutoScale provisions server tiers from
+predicted load with robustness margins and switching-cost
+awareness~\cite{gandhi2012autoscale} --- the direct ancestor of our
+Stage~4 smoothing and release hysteresis --- and empirical
+provisioning models forecast workload to adapt resource
+allocations~\cite{islam2012provisioning}. Measurement-based admission
+control established the principle of committing capacity from
+recent traffic statistics with robustness
+guarantees~\cite{grossglauser1999adaptive}. What the slicing domain
+has lacked is the assembly: these ingredients (calibrated
+conditional quantiles, a priced buffer, feedback modulation,
+churn-bounded actuation, and honest online adaptation) exist
+separately, but no slicing resource manager composes them into one
+auditable loop, evaluated closed-loop on live network data. That
+composition is UCRA's contribution, and the adjacent-domain
+literature provides the confidence that each ingredient is sound.
+
+\subsection{Datasets and Reproducibility in 5G Research}
+
+Progress in this area depends on public, realistic datasets. The CTTC
+B5G slicing dataset~\cite{farreras2024cttc} provides steady-state
+slicing simulation snapshots with per-slice reservations, offered
+traffic, and QoS outcomes; the live RAN performance-counter
+dataset of Lehoczky et al.~\cite{lehoczky2026ran} provides three
+weeks of 15-minute sector-level 5G/4G/2G counters from an operational
+network. Both are on Zenodo with stable identifiers and are used
+here. Reproducibility has become a pressing concern for ML-for-networks
+research~\cite{pineau2021improving}; UCRA releases its full pipeline
+--- ingestion, training, closed-loop evaluation, causality unit
+tests, and the three-seed verification driver --- with pinned
+configuration files so that every number in Section~\ref{sec:results}
+can be regenerated from a clean clone.

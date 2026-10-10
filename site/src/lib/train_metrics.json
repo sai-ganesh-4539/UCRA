@@ -1,6 +1,7 @@
 {
-  "test_pinball": 930.2711791992188,
-  "coverage_90pct": 0.9603174603174603,
+  "test_pinball": 968.8466796875,
+  "coverage_90pct": 0.9325396825396826,
   "n_train": 1175,
-  "n_test": 252
+  "n_test": 252,
+  "seed": 42
 }

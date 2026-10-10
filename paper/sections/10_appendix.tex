@@ -1,0 +1,155 @@
+\appendices
+
+\section{Hyperparameters and Configuration}
+\label{app:hyper}
+
+Table~\ref{tab:hyper} lists the complete operating point of the
+pipeline, exactly as pinned in the released configuration file. The
+operating point was fixed \emph{before} the final evaluation runs;
+the sensitivity of the two knobs that could tempt post-hoc tuning
+(fine-tune epochs, $\kappa$) is quantified in
+Tables~\ref{tab:ftepochs} and~\ref{tab:kappa} rather than silently
+optimized.
+
+\begin{table}[!t]
+\caption{Complete pipeline configuration (released as
+\texttt{configs/default.yaml}).}
+\label{tab:hyper}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llr@{}}
+\toprule
+Block & Parameter & Value \\
+\midrule
+Data & slot duration & 15 min \\
+     & input window $K$ & 96 (24 h) \\
+     & forecast horizon $H$ & 4 (1 h) \\
+     & split (train/val/test) & 70 / 15 / 15 \\
+\midrule
+Stage 1 & architecture & LSTM $2 \times 64$, dropout 0.1 \\
+        & quantile levels & .05 .25 .50 .75 .90 .95 .99 \\
+        & parameters & 52{,}252 \\
+        & loss & pinball (multi-quantile) \\
+        & optimizer & Adam, lr $10^{-3}$, batch 64 \\
+        & early stopping & patience 6, max 50 epochs \\
+\midrule
+Stage 2 & base level $\tau$ & 0.9 \\
+        & risk dial $\kappa$ & 0.5 \\
+        & risk weight $w$ & 0.3 \\
+        & headroom floor $h_{\min}$ & 0.05 \\
+        & reserve ceiling $\gamma_{\max}$ & 0.95 \\
+\midrule
+Stage 3 & pressure exponent $p$ & 1.0 \\
+        & risk exponent $s$ & 0.5 \\
+        & best-effort share $\beta$ & 0.1 \\
+\midrule
+Stage 4 & EWMA $\alpha$ & 0.3 \\
+        & release hysteresis $\theta_{\text{rel}}$ & 0.1 \\
+\midrule
+Stage 5 & violation trigger $v^{*}$ & 0.15 \\
+        & z-score trigger $z^{*}$ & 3.0 \\
+        & check cadence (clean / surge) & 96 / 24 slots \\
+        & replay capacity & 512 (reservoir) \\
+        & fine-tune epochs & 3 \\
+        & fine-tune lr & $0.3 \times 10^{-3}$ \\
+        & label availability delay & $H{-}1 = 3$ slots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Reproduction Workflow}
+\label{app:repro}
+
+Every artifact of this paper is regenerated from a clean clone by the
+command sequence below (Python 3.12+; PyTorch CPU is sufficient).
+Steps 1--4 produce the RAN reference run; step 5 the drift
+experiments; step 6 the CTTC comparison; steps 7--8 the verification
+study and tests.
+
+\begin{table}[!t]
+\caption{One-command reproduction of every result in this paper.}
+\label{tab:commands}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.30\linewidth}p{0.60\linewidth}@{}}
+\toprule
+Step & Command \\
+\midrule
+Dataset (RAN, 8\,MB) & \texttt{python scripts/download\_data.py} \\
+Dataset (CTTC, 271\,MB) & \texttt{python scripts/download\_data.py -{}-cttc} \\
+Data audit & \texttt{python scripts/audit\_data.py -{}-config configs/default.yaml} \\
+Stage-1 training & \texttt{python scripts/train.py -{}-config configs/default.yaml} \\
+Closed loop $+$ $\kappa$ sweep & \texttt{python scripts/run\_ucra.py -{}-config configs/default.yaml -{}-sweep} \\
+Drift demo ($\pm$ shift, epochs) & \texttt{python scripts/demo\_evolution.py [-{}-shift s] [-{}-ft-epochs e]} \\
+CTTC comparison & \texttt{python scripts/run\_cttc\_eval.py -{}-config configs/default.yaml} \\
+CTTC (parallel parse) & \texttt{python scripts/run\_cttc\_parallel.py} \\
+Three-seed study & \texttt{python scripts/run\_seeds.py -{}-config configs/default.yaml} \\
+Causality regression tests & \texttt{python -m pytest tests/test\_causality.py tests/test\_smoke.py -q} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The study is configuration-pinned: the seed is a top-level key; every
+threshold in Table~\ref{tab:hyper} is a config key rather than code
+constant; and all outputs (metrics JSON, per-slot CSV log, figures)
+are written to \texttt{outputs/} deterministically given the config
+and seed. The per-seed runs of the verification study write to
+\texttt{outputs/seed\_<s>/} and aggregate into
+\texttt{outputs/seed\_aggregate.json}, which is the artifact behind
+Tables~\ref{tab:seeds} and~\ref{tab:kappa}.
+
+\section{Per-Seed Detail}
+\label{app:seeds}
+
+\begin{table}[!t]
+\caption{Per-seed closed-loop outcomes on the clean RAN test window
+(252 slots). Violation rate is 0.0\% in every seed; the spread is
+concentrated in forecast conservativeness (utilization/waste).}
+\label{tab:perseed}
+\centering
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Seed & Coverage (\%) & $V$ (\%) & $U$ (\%) & $W$ (\%) \\
+\midrule
+41 & 97.6 & 0.0 & 63.9 & 15.9 \\
+42 & 93.3 & 0.0 & 72.1 & 10.7 \\
+43 & 90.1 & 0.0 & 66.9 & 13.5 \\
+\midrule
+Mean $\pm$ sd & 93.7 $\pm$ 3.8 & 0.0 & 67.6 $\pm$ 3.4 & 13.3 $\pm$ 2.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{Per-seed drift-demo outcomes ($+35\%$ surge from slot 37,
+causal protocol). The evolving pass wins in every seed; the first
+three update points are identical at [96, 120, 144], with seeds 41
+and 43 firing four additional refreshes as their more conservative
+forecasters required more correction.}
+\label{tab:perseeddrift}
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Seed & Frozen $V$ (\%) & Evolving $V$ (\%) & Updates \\
+\midrule
+41 & 38.1 & 21.9 & 7 \\
+42 & 27.4 & 12.1 & 3 \\
+43 & 37.2 & 17.7 & 7 \\
+\midrule
+Mean $\pm$ sd & 34.3 $\pm$ 5.9 & 17.2 $\pm$ 4.9 & 5.7 $\pm$ 2.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tables~\ref{tab:perseed} and~\ref{tab:perseeddrift} give the raw
+per-seed values behind the aggregates used in the main text. The
+seed-to-seed pattern is consistent and interpretable: seed 41
+produces the most conservative forecast (highest coverage, lowest
+clean utilization, most post-surge drift damage), seed 42 the
+tightest; the Stage-5 trigger responds to exactly that conservative
+variability (more updates for the more drifting seeds), and zero
+updates for all seeds on the clean window.

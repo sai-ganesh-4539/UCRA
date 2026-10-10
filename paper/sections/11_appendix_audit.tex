@@ -1,0 +1,127 @@
+\section{Leakage Audit: Defects, Fixes, and Effect on Results}
+\label{app:audit}
+
+This appendix documents the pre-submission information-flow audit in
+full, as a reusable checklist for evaluating self-adaptive forecast
+systems. Three defects were found in our own pipeline; all are fixed
+in the final version, all are pinned by regression tests, and their
+effect on the reported numbers is quantified.
+
+\begin{table}[!t]
+\caption{The three information-flow defects found and fixed during
+the pre-submission audit, and the regression test that pins each
+fix.}
+\label{tab:audit}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.13\linewidth}p{0.40\linewidth}p{0.37\linewidth}@{}}
+\toprule
+Defect & Symptom (pre-fix behavior) & Fix (final behavior) \\
+\midrule
+L1 & Replay buffer accepted a window's full $H$-step target at offer
+time $t$; labels for slots $t{+}1..t{+}H{-}1$ were up to 45 min in
+the future. & \texttt{DelayedReplay} staging queue: a window becomes
+trainable only at $t{+}H{-}1$ (Prop.~\ref{prop:causal}).
+Test: admission-time checks. \\
+\midrule
+L2 & Post-update refresh recomputed forecasts for the entire test
+window, silently altering the served-forecast record, the
+median-forecast baseline, and the band figure for already-served
+slots. & Partial refresh: only slots $> t$ receive the evolved
+forecast; served slots keep their served forecast; baselines read
+the frozen forecast.
+Test: bit-identity of entries $\le t$. \\
+\midrule
+L3 & CTTC policy computed its risk term from the offered load of the
+sample being served (the policy knew the outcome it was protecting
+against). & Sequential serving loop: $\rho$ from previously served
+samples only; current sample observed after its reservation is
+fixed.
+Test: rho computation excludes current sample. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{Effect of the audit on headline numbers. ``Pre-fix'' is the
+leaky pipeline (earlier model checkpoint for the RAN rows; earlier
+$\rho$ definition for CTTC); ``post-fix'' is the final causal
+pipeline. Differences across protocols also include retraining
+variance, so treat them as indicative direction, not exact deltas.
+The audit changed every affected number in the honest direction:
+adaptation gains shrank slightly, and CTTC violations rose
+slightly.}
+\label{tab:audit-numbers}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Quantity (seed 42) & Pre-fix & Post-fix (final) \\
+\midrule
+Clean RAN: UCRA $V$ / $U$ (\%) & 0.0 / 71.7 & 0.0 / 72.1 \\
+Drift demo: frozen $V$ post-surge (\%) & 26.5 & 27.4 \\
+Drift demo: evolving $V$ post-surge (\%) & 11.6 & 12.1 \\
+Apparent adaptation gain (rel.\ red.) & 56.2\% & 55.9\% \\
+CTTC UCRA $\Phi$: URLLC / eMBB / mMTC $V$ (\%) & 1.0 / 1.2 / 1.6 & 1.2 / 1.9 / 2.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Interpretation of Table~\ref{tab:audit-numbers}. The clean-window
+results were unaffected by L1/L2 (no updates fire, so no replay or
+refresh path executes) --- which is precisely why the defect would
+have survived superficial review. The drift demo's adaptation gain
+shrank modestly (the leak's information advantage was bounded by the
+3-slot delay and diluted by reservoir sampling), and the CTTC
+violations rose slightly once the policy could no longer see the
+current sample's outcome. None of the qualitative conclusions
+changed; all of them are now defensible under
+Proposition~\ref{prop:causal}.
+
+\section{Evaluation Checklist for Self-Adaptive Forecast Systems}
+\label{app:checklist}
+
+The distilled, generalized form of the audit methodology, for reuse
+beyond this project. For any forecasting system whose model or
+decision rule adapts online:
+
+\begin{enumerate}
+\item \textbf{Label horizon accounting.} Write down, for every
+training example the updater can touch, the maximum label time it
+contains. Assert: max label time $\le$ current decision time. For
+multi-step forecasters this requires an availability-delay queue,
+not an immediate store (Proposition~\ref{prop:causal}).
+\item \textbf{Committed-decision immutability.} Any artifact
+describing what was served --- reservations, forecasts, baselines,
+figures --- must be computed from the values actually used at
+decision time, never from retroactively refreshed model outputs.
+\item \textbf{Adaptive-term hygiene.} Any per-slot adaptive quantity
+(risk indicator, momentum, scaling factor) may be a function of
+history only; grep the code path for the current slot's realized
+outcome and verify it enters only after the decision.
+\item \textbf{Normalization provenance.} All scalers, quantiles, and
+reference statistics must be fitted on training-period data only;
+assert the fit indices precede the evaluation indices.
+\item \textbf{Baseline symmetry.} Every baseline must satisfy the
+same information constraints as the proposed system; a baseline
+accidentally fed richer information (or poorer) invalidates the
+comparison silently.
+\item \textbf{Failure-visible enforcement.} Encode (1)--(5) as
+executed tests with explicit assertions, so that a future refactor
+that breaks causality fails CI rather than review.
+\item \textbf{Negative-control reporting.} Report what the adaptive
+components do when adaptation is unnecessary (our zero-update
+control), not only when it helps; a trigger that never rests is a
+trigger that adapts to noise.
+\item \textbf{Protocol-change disclosure.} If an audit changes the
+evaluation protocol, republish the affected numbers side by side
+with the old ones (Tables~\ref{tab:audit}
+and~\ref{tab:audit-numbers}); the direction of change is diagnostic
+of the defect's severity.
+\end{enumerate}
+
+Items (1)--(6) are mechanized in this project's test suite; items
+(7)--(8) are editorial practices we recommend for the broader
+literature on self-adaptive network management.

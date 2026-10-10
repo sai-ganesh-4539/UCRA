@@ -47,10 +47,21 @@ Adam, lr = model_lr * 0.3 (gentler than training), full-batch over the
 ```
 
 Full-batch is fine here (512 x 96 floats is tiny). After a successful
-update the driver recomputes `pred_q` with the evolved weights, so the very
-next Phi decision already benefits. run_ucra remembers every test window in
-z-space (`scaler.transform(X), scY.transform(Y)`) -- this exact detail was a
-real bug we fixed in Part D: the buffer originally stored raw-scale targets
+update the driver refreshes forecasts ONLY for slots not yet served
+(t' > t); slots <= t keep the forecast they were actually served with.
+
+**Causal replay intake (pre-submission fix, `DelayedReplay`).** A window
+accepted at loop time t carries an H-step label for slots t..t+H-1, but at
+time t only slot t has been observed. An earlier version pushed the full
+multi-step target into the buffer immediately, so a later fine-tune could
+train on labels up to H-1 = 3 slots (45 min) ahead of the moment they were
+stored - future leakage. Now every offer passes through `DelayedReplay`,
+which releases a window into the `ReplayBuffer` no earlier than t+H-1, the
+first instant at which ALL of its labels exist in a real deployment. The
+reservoir-sampling behavior of the buffer itself is unchanged; only the
+admission time shifted. run_ucra offers every test window in z-space
+(`scaler.transform(X), scY.transform(Y)`) -- this exact detail was a real
+bug we fixed in Part D: the buffer originally stored raw-scale targets
 while the model trains in z-space, which would have corrupted fine-tuning
 the moment it first fired.
 
@@ -68,14 +79,20 @@ cried wolf.
 `demo_evolution.py` multiplies realized demand by 1.35 from slot 37 of the
 252-slot test window (15%), rebuilds windows from the DRIFTED series (the
 model must now forecast a world it never saw), and runs two identical
-passes from the same checkpoint. Your output:
+passes from the same checkpoint. Verified CAUSAL output (seed 42, replay
+intake delayed by H-1 = 3 slots):
 
 ```
 shift 0.35, surge_start_slot 37, n_test 252, capacity 143,954.5
 
-frozen:    viol_overall 22.62% | viol_post_surge 26.51% | util 82.74% | updates 0
-evolving:  viol_overall  9.92% | viol_post_surge 11.63% | util 80.31% | updates 3 [96, 120, 144]
+frozen:    viol_overall 23.41% | viol_post_surge 27.44% | util 83.25% | updates 0
+evolving:  viol_overall 10.32% | viol_post_surge 12.09% | util 81.10% | updates 3 [96, 120, 144]
 ```
+
+Three-seed spread (41/42/43, causal): frozen 34.3% +- 5.9 vs evolving
+17.2% +- 4.9 post-surge; the first three update points are [96, 120, 144]
+in every seed (seeds 41/43 fire four extra refreshes later, 7 total,
+5.7 +- 2.3).
 
 Reading it:
 

@@ -4,6 +4,13 @@ DriftMonitor watches the feedback (violation rate, demand z-score). When a
 trigger fires, the EvolutionEngine fine-tunes theta_t -> theta_{t+1} on a
 reservoir-sampled replay buffer of recent windows (continual learning
 without catastrophic forgetting).
+
+CAUSALITY: a window accepted at loop time t carries labels for test slots
+t .. t+H-1 (H = forecast horizon), but only label t has been observed at
+time t. Training on the full multi-step target at face value would leak
+future outcomes into the model. DelayedReplay gates offers so a window
+enters the ReplayBuffer no earlier than t+H-1 - the first instant at which
+ALL of its labels exist in a real deployment.
 """
 from __future__ import annotations
 
@@ -37,6 +44,43 @@ class ReplayBuffer:
         if not self.X:
             return None, None
         return np.stack(self.X), np.stack(self.Y)
+
+
+class DelayedReplay:
+    """Causally-safe intake between the live loop and a ReplayBuffer.
+
+    offer(t, x, y)  : stage window x with multi-step label y at loop time t.
+                      Its availability time is t + H - 1 (last label index).
+    flush(t)        : release every staged window whose availability time is
+                      <= t into the underlying ReplayBuffer. Call AFTER the
+                      demand at slot t has been observed and BEFORE any
+                      trigger check / fine-tune at t.
+    """
+
+    def __init__(self, replay: ReplayBuffer, horizon: int):
+        self.replay = replay
+        self.horizon = int(horizon)
+        self._pending: list[tuple[int, np.ndarray, np.ndarray]] = []
+        self.n_offered = 0
+        self.n_released = 0
+
+    def offer(self, t: int, x: np.ndarray, y: np.ndarray) -> None:
+        self.n_offered += 1
+        self._pending.append((int(t) + self.horizon - 1, x, y))
+
+    def flush(self, t: int) -> int:
+        ready = [p for p in self._pending if p[0] <= t]
+        if not ready:
+            return 0
+        self._pending = [p for p in self._pending if p[0] > t]
+        for _, x, y in ready:
+            self.replay.push(x, y)
+        self.n_released += len(ready)
+        return len(ready)
+
+    @property
+    def pending(self) -> int:
+        return len(self._pending)
 
 
 class DriftMonitor:

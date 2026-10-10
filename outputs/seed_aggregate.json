@@ -1,0 +1,987 @@
+{
+  "seeds": [
+    41,
+    42,
+    43
+  ],
+  "n_seeds": 3,
+  "causal_replay": true,
+  "aggregate": {
+    "closed_loop.capacity": {
+      "mean": 143954.525,
+      "sd": 0.0,
+      "values": [
+        143954.525,
+        143954.525,
+        143954.525
+      ]
+    },
+    "closed_loop.causal_replay": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "values": [
+        true,
+        true,
+        true
+      ]
+    },
+    "closed_loop.evolution_updates": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0,
+        0,
+        0
+      ]
+    },
+    "closed_loop.label_delay_slots": {
+      "mean": 3.0,
+      "sd": 0.0,
+      "values": [
+        3,
+        3,
+        3
+      ]
+    },
+    "closed_loop.mean_forecast.reservation_error": {
+      "mean": 0.02200042208035787,
+      "sd": 0.0015645078771119232,
+      "values": [
+        0.023366887122392654,
+        0.0202938299626112,
+        0.022340549156069756
+      ]
+    },
+    "closed_loop.mean_forecast.utilization": {
+      "mean": 0.9508908788363138,
+      "sd": 0.0032417626965702572,
+      "values": [
+        0.9477541446685791,
+        0.9506901502609253,
+        0.9542283415794373
+      ]
+    },
+    "closed_loop.mean_forecast.violation_rate": {
+      "mean": 0.4775132275132275,
+      "sd": 0.004582144993568474,
+      "values": [
+        0.4722222222222222,
+        0.4801587301587302,
+        0.4801587301587302
+      ]
+    },
+    "closed_loop.mean_forecast.waste": {
+      "mean": 0.01197885349392891,
+      "sd": 0.0018068562070062814,
+      "values": [
+        0.012196283787488937,
+        0.010073120705783367,
+        0.013667155988514423
+      ]
+    },
+    "closed_loop.n_test": {
+      "mean": 252.0,
+      "sd": 0.0,
+      "values": [
+        252,
+        252,
+        252
+      ]
+    },
+    "closed_loop.oracle_quantile.reservation_error": {
+      "mean": 0.2010344701505471,
+      "sd": 0.0,
+      "values": [
+        0.2010344701505471,
+        0.2010344701505471,
+        0.2010344701505471
+      ]
+    },
+    "closed_loop.oracle_quantile.utilization": {
+      "mean": 0.6490303885022284,
+      "sd": 0.0,
+      "values": [
+        0.6490303885022284,
+        0.6490303885022284,
+        0.6490303885022284
+      ]
+    },
+    "closed_loop.oracle_quantile.violation_rate": {
+      "mean": 0.1626984126984127,
+      "sd": 0.0,
+      "values": [
+        0.1626984126984127,
+        0.1626984126984127,
+        0.1626984126984127
+      ]
+    },
+    "closed_loop.oracle_quantile.waste": {
+      "mean": 0.1948028377889572,
+      "sd": 0.0,
+      "values": [
+        0.1948028377889572,
+        0.1948028377889572,
+        0.1948028377889572
+      ]
+    },
+    "closed_loop.replay_offered": {
+      "mean": 252.0,
+      "sd": 0.0,
+      "values": [
+        252,
+        252,
+        252
+      ]
+    },
+    "closed_loop.replay_released": {
+      "mean": 249.0,
+      "sd": 0.0,
+      "values": [
+        249,
+        249,
+        249
+      ]
+    },
+    "closed_loop.static_peak.reservation_error": {
+      "mean": 0.3046021652312987,
+      "sd": 0.0,
+      "values": [
+        0.3046021652312987,
+        0.3046021652312987,
+        0.3046021652312987
+      ]
+    },
+    "closed_loop.static_peak.utilization": {
+      "mean": 0.547524663283111,
+      "sd": 0.0,
+      "values": [
+        0.547524663283111,
+        0.547524663283111,
+        0.547524663283111
+      ]
+    },
+    "closed_loop.static_peak.violation_rate": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "closed_loop.static_peak.waste": {
+      "mean": 0.3046021652312987,
+      "sd": 0.0,
+      "values": [
+        0.3046021652312987,
+        0.3046021652312987,
+        0.3046021652312987
+      ]
+    },
+    "closed_loop.train_quantile_phi.reservation_error": {
+      "mean": 0.3029006063535906,
+      "sd": 0.0,
+      "values": [
+        0.3029006063535906,
+        0.3029006063535906,
+        0.3029006063535906
+      ]
+    },
+    "closed_loop.train_quantile_phi.utilization": {
+      "mean": 0.5489120952851347,
+      "sd": 0.0,
+      "values": [
+        0.5489120952851347,
+        0.5489120952851347,
+        0.5489120952851347
+      ]
+    },
+    "closed_loop.train_quantile_phi.violation_rate": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "closed_loop.train_quantile_phi.waste": {
+      "mean": 0.3029006063535906,
+      "sd": 0.0,
+      "values": [
+        0.3029006063535906,
+        0.3029006063535906,
+        0.3029006063535906
+      ]
+    },
+    "closed_loop.ucra.reservation_error": {
+      "mean": 0.13337854441813402,
+      "sd": 0.025951892950822623,
+      "values": [
+        0.15855468984777096,
+        0.10671488916793588,
+        0.1348660542386952
+      ]
+    },
+    "closed_loop.ucra.utilization": {
+      "mean": 0.6761390103736055,
+      "sd": 0.04147639942962447,
+      "values": [
+        0.6389960792164214,
+        0.7208943203688463,
+        0.6685266315355488
+      ]
+    },
+    "closed_loop.ucra.violation_rate": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "closed_loop.ucra.waste": {
+      "mean": 0.13337854441813402,
+      "sd": 0.025951892950822623,
+      "values": [
+        0.15855468984777096,
+        0.10671488916793588,
+        0.1348660542386952
+      ]
+    },
+    "drift_demo.capacity": {
+      "mean": 143954.525,
+      "sd": 0.0,
+      "values": [
+        143954.525,
+        143954.525,
+        143954.525
+      ]
+    },
+    "drift_demo.causal_replay": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "values": [
+        true,
+        true,
+        true
+      ]
+    },
+    "drift_demo.eval_every": {
+      "mean": 24.0,
+      "sd": 0.0,
+      "values": [
+        24,
+        24,
+        24
+      ]
+    },
+    "drift_demo.evolving.update_points[0]": {
+      "mean": 96.0,
+      "sd": 0.0,
+      "values": [
+        96,
+        96,
+        96
+      ]
+    },
+    "drift_demo.evolving.update_points[1]": {
+      "mean": 120.0,
+      "sd": 0.0,
+      "values": [
+        120,
+        120,
+        120
+      ]
+    },
+    "drift_demo.evolving.update_points[2]": {
+      "mean": 144.0,
+      "sd": 0.0,
+      "values": [
+        144,
+        144,
+        144
+      ]
+    },
+    "drift_demo.evolving.updates": {
+      "mean": 5.666666666666667,
+      "sd": 2.309401076758503,
+      "values": [
+        7,
+        3,
+        7
+      ]
+    },
+    "drift_demo.evolving.utilization_post_surge": {
+      "mean": 0.7821479030222184,
+      "sd": 0.027499607491404045,
+      "values": [
+        0.7562140120777068,
+        0.8109831624420843,
+        0.7792465345468639
+      ]
+    },
+    "drift_demo.evolving.viol_overall": {
+      "mean": 0.14682539682539683,
+      "sd": 0.041808149812907695,
+      "values": [
+        0.1865079365079365,
+        0.10317460317460317,
+        0.15079365079365079
+      ]
+    },
+    "drift_demo.evolving.viol_post_surge": {
+      "mean": 0.17209302325581396,
+      "sd": 0.049003040710942976,
+      "values": [
+        0.2186046511627907,
+        0.12093023255813953,
+        0.17674418604651163
+      ]
+    },
+    "drift_demo.frozen.updates": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0,
+        0,
+        0
+      ]
+    },
+    "drift_demo.frozen.utilization_post_surge": {
+      "mean": 0.8035008059205921,
+      "sd": 0.027930550040534876,
+      "values": [
+        0.7767763681090316,
+        0.8324985274824704,
+        0.8012275221702746
+      ]
+    },
+    "drift_demo.frozen.viol_overall": {
+      "mean": 0.2923280423280423,
+      "sd": 0.05055956310480527,
+      "values": [
+        0.3253968253968254,
+        0.23412698412698413,
+        0.31746031746031744
+      ]
+    },
+    "drift_demo.frozen.viol_post_surge": {
+      "mean": 0.34263565891472875,
+      "sd": 0.05926051117400432,
+      "values": [
+        0.3813953488372093,
+        0.2744186046511628,
+        0.37209302325581395
+      ]
+    },
+    "drift_demo.label_delay_slots": {
+      "mean": 3.0,
+      "sd": 0.0,
+      "values": [
+        3,
+        3,
+        3
+      ]
+    },
+    "drift_demo.n_test": {
+      "mean": 252.0,
+      "sd": 0.0,
+      "values": [
+        252,
+        252,
+        252
+      ]
+    },
+    "drift_demo.shift": {
+      "mean": 0.3499999999999999,
+      "sd": 0.0,
+      "values": [
+        0.35,
+        0.35,
+        0.35
+      ]
+    },
+    "drift_demo.surge_start_slot": {
+      "mean": 37.0,
+      "sd": 0.0,
+      "values": [
+        37,
+        37,
+        37
+      ]
+    },
+    "kappa_sweep.kappas[0]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.kappas[1]": {
+      "mean": 0.25,
+      "sd": 0.0,
+      "values": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "kappa_sweep.kappas[2]": {
+      "mean": 0.5,
+      "sd": 0.0,
+      "values": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "kappa_sweep.kappas[3]": {
+      "mean": 0.75,
+      "sd": 0.0,
+      "values": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    },
+    "kappa_sweep.kappas[4]": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "kappa_sweep.kappas[5]": {
+      "mean": 1.5,
+      "sd": 0.0,
+      "values": [
+        1.5,
+        1.5,
+        1.5
+      ]
+    },
+    "kappa_sweep.kappas[6]": {
+      "mean": 2.0,
+      "sd": 0.0,
+      "values": [
+        2.0,
+        2.0,
+        2.0
+      ]
+    },
+    "kappa_sweep.rho_weight": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.utilization[0]": {
+      "mean": 0.7552839804267566,
+      "sd": 0.04104077159800821,
+      "values": [
+        0.7178821352917639,
+        0.799187510373915,
+        0.748782295614591
+      ]
+    },
+    "kappa_sweep.utilization[1]": {
+      "mean": 0.7120889423278283,
+      "sd": 0.042888776047750744,
+      "values": [
+        0.6735307764814167,
+        0.7582826680276823,
+        0.7044533824743859
+      ]
+    },
+    "kappa_sweep.utilization[2]": {
+      "mean": 0.6749360560369203,
+      "sd": 0.04346244277853862,
+      "values": [
+        0.6361843791513171,
+        0.7219291822935732,
+        0.6666946066658705
+      ]
+    },
+    "kappa_sweep.utilization[3]": {
+      "mean": 0.6424576007106148,
+      "sd": 0.04343177421996393,
+      "values": [
+        0.6039566846116339,
+        0.689539311095355,
+        0.6338768064248554
+      ]
+    },
+    "kappa_sweep.utilization[4]": {
+      "mean": 0.6136424392468323,
+      "sd": 0.04305095534616984,
+      "values": [
+        0.5756351248518572,
+        0.6603943900058895,
+        0.6048978028827502
+      ]
+    },
+    "kappa_sweep.utilization[5]": {
+      "mean": 0.5643807045955959,
+      "sd": 0.04175380562449281,
+      "values": [
+        0.527700060649177,
+        0.6098185920292846,
+        0.5556234611083259
+      ]
+    },
+    "kappa_sweep.utilization[6]": {
+      "mean": 0.5234543870394425,
+      "sd": 0.040159832712814314,
+      "values": [
+        0.4882545831202007,
+        0.5671989350390546,
+        0.5149096429590722
+      ]
+    },
+    "kappa_sweep.violation_rate[0]": {
+      "mean": 0.003968253968253968,
+      "sd": 0.0,
+      "values": [
+        0.003968253968253968,
+        0.003968253968253968,
+        0.003968253968253968
+      ]
+    },
+    "kappa_sweep.violation_rate[1]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.violation_rate[2]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.violation_rate[3]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.violation_rate[4]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.violation_rate[5]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "kappa_sweep.violation_rate[6]": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "train.coverage_90pct": {
+      "mean": 0.9365079365079364,
+      "sd": 0.03785473021495814,
+      "values": [
+        0.9761904761904762,
+        0.9325396825396826,
+        0.9007936507936508
+      ]
+    },
+    "train.n_test": {
+      "mean": 252.0,
+      "sd": 0.0,
+      "values": [
+        252,
+        252,
+        252
+      ]
+    },
+    "train.n_train": {
+      "mean": 1175.0,
+      "sd": 0.0,
+      "values": [
+        1175,
+        1175,
+        1175
+      ]
+    },
+    "train.seed": {
+      "mean": 42.0,
+      "sd": 1.0,
+      "values": [
+        41,
+        42,
+        43
+      ]
+    },
+    "train.test_pinball": {
+      "mean": 1044.7745768229167,
+      "sd": 74.91193806951864,
+      "values": [
+        1118.62744140625,
+        968.8466796875,
+        1046.849609375
+      ]
+    }
+  },
+  "per_seed": {
+    "41": {
+      "train": {
+        "test_pinball": 1118.62744140625,
+        "coverage_90pct": 0.9761904761904762,
+        "n_train": 1175,
+        "n_test": 252,
+        "seed": 41
+      },
+      "closed_loop": {
+        "ucra": {
+          "reservation_error": 0.15855468984777096,
+          "violation_rate": 0.0,
+          "utilization": 0.6389960792164214,
+          "waste": 0.15855468984777096
+        },
+        "static_peak": {
+          "reservation_error": 0.3046021652312987,
+          "violation_rate": 0.0,
+          "utilization": 0.547524663283111,
+          "waste": 0.3046021652312987
+        },
+        "mean_forecast": {
+          "reservation_error": 0.023366887122392654,
+          "violation_rate": 0.4722222222222222,
+          "utilization": 0.9477541446685791,
+          "waste": 0.012196283787488937
+        },
+        "train_quantile_phi": {
+          "reservation_error": 0.3029006063535906,
+          "violation_rate": 0.0,
+          "utilization": 0.5489120952851347,
+          "waste": 0.3029006063535906
+        },
+        "oracle_quantile": {
+          "reservation_error": 0.2010344701505471,
+          "violation_rate": 0.1626984126984127,
+          "utilization": 0.6490303885022284,
+          "waste": 0.1948028377889572
+        },
+        "capacity": 143954.525,
+        "evolution_updates": 0,
+        "update_points": [],
+        "causal_replay": true,
+        "label_delay_slots": 3,
+        "replay_offered": 252,
+        "replay_released": 249,
+        "n_test": 252
+      },
+      "kappa_sweep": {
+        "kappas": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "violation_rate": [
+          0.003968253968253968,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "utilization": [
+          0.7178821352917639,
+          0.6735307764814167,
+          0.6361843791513171,
+          0.6039566846116339,
+          0.5756351248518572,
+          0.527700060649177,
+          0.4882545831202007
+        ],
+        "source": "frozen_pred_q",
+        "rho_weight": 0.0
+      },
+      "drift_demo": {
+        "shift": 0.35,
+        "surge_start_slot": 37,
+        "n_test": 252,
+        "capacity": 143954.525,
+        "causal_replay": true,
+        "label_delay_slots": 3,
+        "eval_every": 24,
+        "frozen": {
+          "viol_overall": 0.3253968253968254,
+          "viol_post_surge": 0.3813953488372093,
+          "utilization_post_surge": 0.7767763681090316,
+          "updates": 0
+        },
+        "evolving": {
+          "viol_overall": 0.1865079365079365,
+          "viol_post_surge": 0.2186046511627907,
+          "utilization_post_surge": 0.7562140120777068,
+          "updates": 7,
+          "update_points": [
+            96,
+            120,
+            144,
+            168,
+            192,
+            216,
+            240
+          ]
+        }
+      }
+    },
+    "42": {
+      "train": {
+        "test_pinball": 968.8466796875,
+        "coverage_90pct": 0.9325396825396826,
+        "n_train": 1175,
+        "n_test": 252,
+        "seed": 42
+      },
+      "closed_loop": {
+        "ucra": {
+          "reservation_error": 0.10671488916793588,
+          "violation_rate": 0.0,
+          "utilization": 0.7208943203688463,
+          "waste": 0.10671488916793588
+        },
+        "static_peak": {
+          "reservation_error": 0.3046021652312987,
+          "violation_rate": 0.0,
+          "utilization": 0.547524663283111,
+          "waste": 0.3046021652312987
+        },
+        "mean_forecast": {
+          "reservation_error": 0.0202938299626112,
+          "violation_rate": 0.4801587301587302,
+          "utilization": 0.9506901502609253,
+          "waste": 0.010073120705783367
+        },
+        "train_quantile_phi": {
+          "reservation_error": 0.3029006063535906,
+          "violation_rate": 0.0,
+          "utilization": 0.5489120952851347,
+          "waste": 0.3029006063535906
+        },
+        "oracle_quantile": {
+          "reservation_error": 0.2010344701505471,
+          "violation_rate": 0.1626984126984127,
+          "utilization": 0.6490303885022284,
+          "waste": 0.1948028377889572
+        },
+        "capacity": 143954.525,
+        "evolution_updates": 0,
+        "update_points": [],
+        "causal_replay": true,
+        "label_delay_slots": 3,
+        "replay_offered": 252,
+        "replay_released": 249,
+        "n_test": 252
+      },
+      "kappa_sweep": {
+        "kappas": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "violation_rate": [
+          0.003968253968253968,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "utilization": [
+          0.799187510373915,
+          0.7582826680276823,
+          0.7219291822935732,
+          0.689539311095355,
+          0.6603943900058895,
+          0.6098185920292846,
+          0.5671989350390546
+        ],
+        "source": "frozen_pred_q",
+        "rho_weight": 0.0
+      },
+      "drift_demo": {
+        "shift": 0.35,
+        "surge_start_slot": 37,
+        "n_test": 252,
+        "capacity": 143954.525,
+        "causal_replay": true,
+        "label_delay_slots": 3,
+        "eval_every": 24,
+        "frozen": {
+          "viol_overall": 0.23412698412698413,
+          "viol_post_surge": 0.2744186046511628,
+          "utilization_post_surge": 0.8324985274824704,
+          "updates": 0
+        },
+        "evolving": {
+          "viol_overall": 0.10317460317460317,
+          "viol_post_surge": 0.12093023255813953,
+          "utilization_post_surge": 0.8109831624420843,
+          "updates": 3,
+          "update_points": [
+            96,
+            120,
+            144
+          ]
+        }
+      }
+    },
+    "43": {
+      "train": {
+        "test_pinball": 1046.849609375,
+        "coverage_90pct": 0.9007936507936508,
+        "n_train": 1175,
+        "n_test": 252,
+        "seed": 43
+      },
+      "closed_loop": {
+        "ucra": {
+          "reservation_error": 0.1348660542386952,
+          "violation_rate": 0.0,
+          "utilization": 0.6685266315355488,
+          "waste": 0.1348660542386952
+        },
+        "static_peak": {
+          "reservation_error": 0.3046021652312987,
+          "violation_rate": 0.0,
+          "utilization": 0.547524663283111,
+          "waste": 0.3046021652312987
+        },
+        "mean_forecast": {
+          "reservation_error": 0.022340549156069756,
+          "violation_rate": 0.4801587301587302,
+          "utilization": 0.9542283415794373,
+          "waste": 0.013667155988514423
+        },
+        "train_quantile_phi": {
+          "reservation_error": 0.3029006063535906,
+          "violation_rate": 0.0,
+          "utilization": 0.5489120952851347,
+          "waste": 0.3029006063535906
+        },
+        "oracle_quantile": {
+          "reservation_error": 0.2010344701505471,
+          "violation_rate": 0.1626984126984127,
+          "utilization": 0.6490303885022284,
+          "waste": 0.1948028377889572
+        },
+        "capacity": 143954.525,
+        "evolution_updates": 0,
+        "update_points": [],
+        "causal_replay": true,
+        "label_delay_slots": 3,
+        "replay_offered": 252,
+        "replay_released": 249,
+        "n_test": 252
+      },
+      "kappa_sweep": {
+        "kappas": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "violation_rate": [
+          0.003968253968253968,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "utilization": [
+          0.748782295614591,
+          0.7044533824743859,
+          0.6666946066658705,
+          0.6338768064248554,
+          0.6048978028827502,
+          0.5556234611083259,
+          0.5149096429590722
+        ],
+        "source": "frozen_pred_q",
+        "rho_weight": 0.0
+      },
+      "drift_demo": {
+        "shift": 0.35,
+        "surge_start_slot": 37,
+        "n_test": 252,
+        "capacity": 143954.525,
+        "causal_replay": true,
+        "label_delay_slots": 3,
+        "eval_every": 24,
+        "frozen": {
+          "viol_overall": 0.31746031746031744,
+          "viol_post_surge": 0.37209302325581395,
+          "utilization_post_surge": 0.8012275221702746,
+          "updates": 0
+        },
+        "evolving": {
+          "viol_overall": 0.15079365079365079,
+          "viol_post_surge": 0.17674418604651163,
+          "utilization_post_surge": 0.7792465345468639,
+          "updates": 7,
+          "update_points": [
+            96,
+            120,
+            144,
+            168,
+            192,
+            216,
+            240
+          ]
+        }
+      }
+    }
+  }
+}

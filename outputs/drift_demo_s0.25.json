@@ -1,0 +1,22 @@
+{
+  "shift": 0.25,
+  "surge_start_slot": 37,
+  "n_test": 252,
+  "capacity": 143954.525,
+  "causal_replay": true,
+  "label_delay_slots": 3,
+  "eval_every": 24,
+  "frozen": {
+    "viol_overall": 0.10317460317460317,
+    "viol_post_surge": 0.12093023255813953,
+    "utilization_post_surge": 0.806836520496882,
+    "updates": 0
+  },
+  "evolving": {
+    "viol_overall": 0.10317460317460317,
+    "viol_post_surge": 0.12093023255813953,
+    "utilization_post_surge": 0.806836520496882,
+    "updates": 0,
+    "update_points": []
+  }
+}

@@ -23,19 +23,20 @@ from ucra.eval.plots import plot_training_history
 from ucra.models.quantile_lstm import QuantileLSTM, predict_quantiles, train_model
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default="configs/default.yaml")
-    args = ap.parse_args()
-    cfg = yaml.safe_load(open(args.config))
-    mc = cfg["model"]
+def train_and_save(cfg: dict, verbose: bool = True) -> dict:
+    """Train Stage-1 on cfg (respects cfg['seed'], cfg['paths']['outputs']).
 
+    Returns the train_metrics dict; saves model.pt, scaler.npz, history.png.
+    """
+    mc = cfg["model"]
     torch.manual_seed(cfg["seed"])
     np.random.seed(cfg["seed"])
 
-    print(f"[train] loading dataset '{cfg['data']['dataset']}' ...")
-    series, extras = load_dataset(cfg)
-    print(f"[train] {len(series)} slots | capacity ~{extras['capacity']:.1f}")
+    if verbose:
+        print(f"[train] loading dataset '{cfg['data']['dataset']}' ...")
+    series, extras = load_dataset(cfg, verbose=verbose)
+    if verbose:
+        print(f"[train] {len(series)} slots | capacity ~{extras['capacity']:.1f}")
 
     X, Y = make_windows(series.values, mc["seq_len"], mc["horizon"])
     itr, iva, ite = chronological_split(len(X), tuple(mc["train_val_test"]))
@@ -50,12 +51,13 @@ def main():
     model = QuantileLSTM(mc["seq_len"], mc["horizon"], mc["quantiles"],
                          mc["hidden_size"], mc["num_layers"], mc["dropout"])
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"[train] model params: {n_params:,}")
+    if verbose:
+        print(f"[train] model params: {n_params:,}")
 
-    hist = train_model(model, Xtr, Ytr, Xva, Yva, mc)
+    hist = train_model(model, Xtr, Ytr, Xva, Yva, mc, verbose=verbose)
 
     out = Path(cfg["paths"]["outputs"])
-    out.mkdir(exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": model.state_dict(),
                 "cfg": {"seq_len": mc["seq_len"], "horizon": mc["horizon"],
                         "quantiles": mc["quantiles"], "hidden_size": mc["hidden_size"],
@@ -73,12 +75,23 @@ def main():
     cover = float(np.mean((Y_orig[:, 0] >= qt[:, 0, q05]) & (Y_orig[:, 0] <= qt[:, 0, q99])))
     metrics = {"test_pinball": float(make_loss(mc["quantiles"])(
         torch.tensor(qt), torch.tensor(Y_orig))),
-        "coverage_90pct": cover, "n_train": len(itr), "n_test": len(ite)}
+        "coverage_90pct": cover, "n_train": len(itr), "n_test": len(ite),
+        "seed": int(cfg["seed"])}
     (out / "train_metrics.json").write_text(json.dumps(metrics, indent=2))
     plot_training_history(hist, out / "history.png")
 
-    print("[train] done:", json.dumps(metrics, indent=2))
-    print(f"[train] saved {out/'model.pt'}, {out/'scaler.npz'}, history.png")
+    if verbose:
+        print("[train] done:", json.dumps(metrics, indent=2))
+        print(f"[train] saved {out/'model.pt'}, {out/'scaler.npz'}, history.png")
+    return metrics
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default="configs/default.yaml")
+    args = ap.parse_args()
+    cfg = yaml.safe_load(open(args.config))
+    train_and_save(cfg)
 
 
 if __name__ == "__main__":

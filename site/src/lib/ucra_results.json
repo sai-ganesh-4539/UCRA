@@ -1,9 +1,9 @@
 {
   "ucra": {
-    "reservation_error": 0.10798687751009597,
+    "reservation_error": 0.10671488916793588,
     "violation_rate": 0.0,
-    "utilization": 0.7169706975369444,
-    "waste": 0.10798687751009597
+    "utilization": 0.7208943203688463,
+    "waste": 0.10671488916793588
   },
   "static_peak": {
     "reservation_error": 0.3046021652312987,
@@ -12,10 +12,16 @@
     "waste": 0.3046021652312987
   },
   "mean_forecast": {
-    "reservation_error": 0.01957099884748459,
-    "violation_rate": 0.503968253968254,
-    "utilization": 0.9529198408126831,
-    "waste": 0.00918536726385355
+    "reservation_error": 0.0202938299626112,
+    "violation_rate": 0.4801587301587302,
+    "utilization": 0.9506901502609253,
+    "waste": 0.010073120705783367
+  },
+  "train_quantile_phi": {
+    "reservation_error": 0.3029006063535906,
+    "violation_rate": 0.0,
+    "utilization": 0.5489120952851347,
+    "waste": 0.3029006063535906
   },
   "oracle_quantile": {
     "reservation_error": 0.2010344701505471,
@@ -24,5 +30,11 @@
     "waste": 0.1948028377889572
   },
   "capacity": 143954.525,
-  "evolution_updates": 0
+  "evolution_updates": 0,
+  "update_points": [],
+  "causal_replay": true,
+  "label_delay_slots": 3,
+  "replay_offered": 252,
+  "replay_released": 249,
+  "n_test": 252
 }

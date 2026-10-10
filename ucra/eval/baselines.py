@@ -24,3 +24,21 @@ def oracle_quantile(test_demand: np.ndarray, horizon: int,
         lo = max(0, i - w)
         out[i] = np.quantile(test_demand[lo:i + 1], tau) if i > 0 else test_demand[0]
     return out
+
+
+def train_quantile_phi(train_demand: np.ndarray, n_test: int,
+                       phi_cfg: dict) -> np.ndarray:
+    """Train-only Phi reservation (static, uncertainty-aware).
+
+    Applies the SAME kappa-buffer rule as Stage 2, but with u_hat, q_tau and
+    spread taken from the TRAINING distribution only and frozen for the whole
+    test window:   R = q90_train + kappa * (q99_train - q50_train).
+    No online forecasts, no risk feedback, no EWMA. Isolates what the
+    adaptive Stage 1-4 loop adds over a static uncertainty buffer.
+    """
+    q50 = float(np.quantile(train_demand, 0.5))
+    q_tau = float(np.quantile(train_demand, phi_cfg["base_tau"]))
+    q99 = float(np.quantile(train_demand, 0.99))
+    spread = max(q99 - q50, 1e-9)
+    r = q_tau + phi_cfg["kappa"] * spread
+    return np.full(n_test, r)

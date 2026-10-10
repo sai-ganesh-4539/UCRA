@@ -59,15 +59,21 @@ python scripts/run_cttc_eval.py                  # Stage 2-3 on CTTC slices
 
 RAN PM counters (Zenodo 17815388, Dataset_01): 75 sectors, 4G+5G, 15-min
 slots; longest gap-free segment 1,778 slots (Oct 6-25, 2023); capacity
-estimate ~143,955. Quantile-LSTM Stage 1: 52,252 params, test pinball 930.3,
-coverage 96.0% at the 90% nominal level, CPU-trained in ~3 minutes.
+estimate ~143,955. Quantile-LSTM Stage 1: 52,252 params, test pinball 968.8,
+coverage 93.3% at the 90% nominal level, CPU-trained in ~3 minutes
+(3-seed mean 93.7% +- 3.8).
 
 | Policy | Reservation error | Violation rate | Utilization |
 |---|---|---|---|
-| **UCRA (kappa = 0.5)** | 10.8% | **0.0%** | **71.7%** |
+| **UCRA (kappa = 0.5)** | 10.7% | **0.0%** | **72.1%** |
 | static_peak | 30.5% | 0.0% | 54.8% |
-| mean_forecast | 2.0% | 50.4% | 95.3% |
+| mean_forecast | 2.0% | 48.0% | 95.1% |
+| train_quantile_phi | 30.3% | 0.0% | 54.9% |
 | oracle_quantile | 20.1% | 16.3% | 64.9% |
+
+(Verified causal-protocol numbers, seed 42. Full verification: 3-seed
+study via `scripts/run_seeds.py`, causality tests via
+`tests/test_causality.py`.)
 
 UCRA is the only policy that simultaneously holds zero violations **and**
 high utilization: static over-reservation wastes ~30% of capacity, and naive
@@ -79,11 +85,14 @@ mean forecasting violates half of all slots. The kappa sweep
 Per-slice-type empirical offered-load quantiles feed the same Phi transform;
 policies are compared on held-out snapshots (`scripts/run_cttc_eval.py`):
 
-| Slice | Operator (static delta) | Static q90 | UCRA (Phi) |
-|---|---|---|---|
-| URLLC | 26.2% violations | 9.9% | **1.0%** |
-| eMBB | 44.2% violations | 5.3% | **1.2%** |
-| mMTC | 5.4% violations | 11.4% | **1.6%** |
+| Slice | Operator (static delta) | Static q90 | Train-only Phi | UCRA (causal Phi) |
+|---|---|---|---|---|
+| URLLC | 29.2% violations | 12.1% | 1.2% | **1.2%** |
+| eMBB | 43.7% violations | 4.4% | 1.9% | **1.9%** |
+| mMTC | 5.8% violations | 17.6% | 2.6% | **2.6%** |
+
+(Verified numbers: causal rho, 229 retained snapshots. ucra_phi ~=
+train-only Phi here - the kappa buffer does the work; see doc 12 sec 7.)
 
 Static delta sizing misses URLLC/eMBB demand spikes; the risk-aware
 transform holds near-zero violations in exchange for over-provisioning

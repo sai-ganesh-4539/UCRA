@@ -1,0 +1,165 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Scope of the Online-Learning Claim}
+
+A recurring temptation in self-adaptive systems is to let strong
+scenarios launder weak evidence. Our pre-submission review caught the
+beginning of exactly this. The clean RAN experiment --- the principal
+experiment of the paper --- triggers \emph{zero} evolution updates,
+so it cannot, by itself, demonstrate that online learning improves
+real-world outcomes; it demonstrates the opposite-flavored result
+that the trigger does not misfire. The adaptation claim therefore
+rests on the surge experiment alone, and we have scoped it that way:
+under a $+35\%$ step with a causal information budget, self-evolution
+halves post-surge violations across seeds. We stress what the surge
+experiment is and is not. It is a controlled, repeatable regime-shift
+probe on top of real demand data --- the standard methodology for
+evaluating drift response when the held-out window is (fortunately)
+drift-free. It is not evidence that UCRA would already have adapted
+to the real test window's natural conditions; on that window there
+was nothing to adapt to, which is itself the deployment-happy case.
+Future work should accumulate natural-drift evidence: longer windows,
+multiple network segments (the RAN dataset ships three), and
+production A/B shadow comparisons where ethics and contracts permit.
+
+\subsection{What the Leakage Audit Does and Does Not Guarantee}
+
+The causal protocol of Section~\ref{sec:stage5} guarantees that the
+learner's training labels at update time $t$ are a subset of the
+labels observable at $t$. Three caveats bound the guarantee. First,
+it covers \emph{label}-availability leakage; it does not
+automatically detect other leakage channels (e.g., preprocessing
+statistics fitted on the full window), which our audit handles by
+construction (scalers fitted on train segments only) but a different
+pipeline might not. Second, the surge experiment's \emph{input
+windows} are built from the drifted series, which is correct (the
+deployed system would observe drifted inputs) but means the
+experiment measures adaptation under the assumption that drift is
+observable in the inputs --- a stealth drift that alters outcomes
+without touching observable demand could evade Trigger B, though
+Trigger A (violations) would still catch it in operation. Third,
+causality is necessary but not sufficient for good adaptation: the
+protocol ensures the evaluation is honest, not that the fine-tuning
+hyperparameters are optimal; our sensitivity grid suggests the
+update behavior is robust (identical trigger points across seeds and
+across fine-tune hyperparameter settings in the released grid), but
+we present the residual post-surge violations as the honest cost of
+gentle adaptation rather than a tuned optimum.
+
+\subsection{Why a Simple Transform Can Beat a Cheating Oracle}
+
+The most counterintuitive row in Table~\ref{tab:main} is the oracle's
+16.3\% violations. The mechanism is worth spelling out because it
+generalizes. A rolling historical quantile reacts to bursts
+\emph{after} they enter its window and forgets lulls as the window
+advances; on heavy-tailed 15-minute demand, its conditional violation
+probability sits well above the nominal $1 - \tau$. UCRA's
+reservation, by contrast, is anchored to a \emph{learned} conditional
+distribution that maps contextual structure (hour of day, weekend,
+recent volatility) to the quantile, and its kappa buffer adds slack
+exactly where the learned band is wide. The lesson for practitioners
+is that nominal quantile levels are not violation guarantees unless
+the quantiles are conditional, calibrated, and buffered --- and the
+kappa dial is precisely the operator's handle for converting
+``approximately calibrated'' into ``operationally zero.''
+
+\subsection{Limitations and Threats to Validity}
+
+\emph{External validity.} All RAN-side results come from one
+18.5-day segment of one network (dataset01 of three available);
+three seeds quantify training variance, not network variance. The
+CTTC workload is simulation-derived with its own traffic
+assumptions. Neither dataset exercises multi-domain (radio +
+transport + core) reservation, and the capacity model
+($1.3\times$ peak) is an operator rule, not a measured envelope.
+
+\emph{Construct validity.} Violation is binary per slot; real SLAs
+grade severity (duration, depth, affected users), and a policy could
+game the metric with tiny-but-frequent violations. Our logged
+per-slot artifacts enable severity-aware re-analysis, but the
+headlines here are binary.
+
+\emph{Internal validity.} The leakage audit covers the three
+channels we found; the regression tests pin them. We cannot prove
+the absence of unknown channels --- only that the final pipeline's
+information flows were reviewed end to end, and that the audit
+methodology is released with the code for re-review.
+
+\emph{Statistical scope.} Three seeds is a pragmatic budget for a
+52k-parameter model trained in minutes, adequate to expose the
+$\pm 3$--6 point spreads we report, but marginal for tail claims
+(e.g., the exact knee of the $\kappa$ frontier). The released sweep
+artifacts include per-seed curves so readers can apply their own
+inference.
+
+\emph{Baseline scope.} We compare against reservation policies that
+share UCRA's information budget. We do not compare against
+reinforcement-learning slice controllers; doing so would strengthen
+the auditability argument empirically but requires an exploration
+budget on live infrastructure that is outside this study's ethics
+and scope. The train-only $\Phi$ and oracle quantile baselines
+bracket what forecast-free and forecast-omniscient policies can do,
+which is the comparison UCRA's design thesis requires.
+
+\emph{Deployment economics.} On the evaluated segment, static peak
+sizing idles 30.5\% of capacity against UCRA's 10.7\% --- a 19.8-point
+reduction in waste, i.e., UCRA commits $\approx$65\% less idle
+capacity for the identical zero-violation outcome. At 15-minute
+granularity this compounds to roughly 2{,}470 slot-capacity
+equivalents freed per 1{,}000 slots of operation; at sector scale and
+backhaul tariffs this is the difference between buying and
+re-timing capacity. The remaining 10.7\% waste is not slop: it is
+the priced insurance premium of Proposition~\ref{prop:bound}
+(the buffer above the q90 base), it is stable across seeds
+($13.3\% \pm 2.1$), and it can be traded toward utilization with
+Table~\ref{tab:kappa} in hand rather than discovered in an outage
+post-mortem.
+
+\subsection{Generalization Beyond Radio Demand}
+
+The UCRA loop assumes nothing specific about radio access: it needs
+a univariate demand stream at a fixed slot, a capacity envelope, and
+feedback about whether the reservation held. The same five stages
+therefore transfer, with re-parameterization, to transport-bandwidth
+reservations between data centers, compute reservations for
+cloud-native network functions (where the CTTC-style snapshot
+evaluation applies naturally), energy procurement for base-site
+batteries under time-of-use tariffs, and standby-capacity sizing for
+network operations centers. What does not transfer automatically is
+the forecast's seasonality structure (24-hour windows encode a
+diurnal regime; weekly data would want $K$ re-tuned) and the drift
+trigger thresholds, which are policy choices tied to each domain's
+violation economics. The framework's claim is the contract between
+uncertainty and commitment --- calibration in, auditable reservation
+out, causal adaptation in between --- not the radio domain
+itself.
+
+\subsection{Deployment Considerations}
+
+The deployed loop is deliberately light: one LSTM forward pass
+(52k parameters, sub-millisecond on CPU), linear transform
+arithmetic, a 512-window buffer, and at most a few fine-tune events
+per day under drift. The operational levers map to organizational
+roles: $\kappa$ and $\tau$ are policy (owned by SLA/finance),
+trigger thresholds are operations (owned by NOC), and the forecast
+model is engineering (retrained offline, patched online by Stage~5).
+The all-zero-violation operating point's $\approx$28\% utilization
+gain over peak sizing translates directly into capacity that can be
+resold or deferred --- on the evaluated segment, roughly 28\% of
+three weeks of sector capacity --- which is the economic argument
+for the entire pipeline.
+
+\begin{figure}[!t]
+\centering
+\diagramplaceholder{4.2cm}{deployment-context}
+{Suggested content: a deployment topology diagram --- the UCRA loop
+running beside the network's PM counter pipeline: PM counters
+$\rightarrow$ ingestion $\rightarrow$ UCRA controller (Stages 1--5)
+$\rightarrow$ reservation commands to the slice manager / OSS;
+drift alerts and $\kappa$ policy console for the NOC; and the offline
+retraining path. Mark which components are online (per-slot) versus
+offline (per-seed).}
+\caption{Deployment context of the UCRA loop.}
+\label{fig:deployment}
+\end{figure}

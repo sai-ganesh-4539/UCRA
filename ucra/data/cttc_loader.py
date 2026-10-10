@@ -30,8 +30,15 @@ def _ensure_datanetapi(samples_dir: Path) -> None:
 
 
 def load_cttc(samples_dir: str | Path = "data/cttc/slicing-simulations",
-              max_samples: int | None = None, verbose: bool = True) -> pd.DataFrame:
-    """Iterate datanetAPI samples and build the slice-level frame."""
+              max_samples: int | None = None, verbose: bool = True,
+              tars: list[str] | None = None) -> pd.DataFrame:
+    """Iterate datanetAPI samples and build the slice-level frame.
+
+    tars: optional list of tar.gz filenames (as returned by
+    DatanetAPI.get_available_files) restricting the scan to those archives.
+    Lets a driver parallelize parsing across archives (see
+    scripts/run_cttc_parallel.py).
+    """
     samples_dir = Path(samples_dir)
     if not samples_dir.exists():
         raise FileNotFoundError(
@@ -46,6 +53,16 @@ def load_cttc(samples_dir: str | Path = "data/cttc/slicing-simulations",
             "(it ships with Zenodo 10610616)") from e
 
     reader = DatanetAPI(str(samples_dir))
+    if tars:
+        avail = {f: (r, f) for r, f in reader.get_available_files()}
+        sel = [avail[t] for t in tars if t in avail]
+        if not sel:
+            raise ValueError(f"none of the requested tars found: {tars}")
+        # NOTE: datanetAPI.set_files_to_process() has a shadowing bug
+        # (`for tuple in ...` shadows the builtin, so its own type check
+        # always fails) -> assign the internal attribute directly. __iter__
+        # reads exactly this attribute.
+        reader._selected_tuple_files = list(sel)
     rows = []
     for i, sample in enumerate(reader):
         if max_samples is not None and i >= max_samples:

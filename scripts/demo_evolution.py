@@ -12,6 +12,12 @@ Two passes over the same drifted window, both starting from outputs/model.pt:
 The surge is a step multiplier on realized demand (simulates a mass event /
 flash crowd on top of the real RAN traces). Nothing else changes.
 
+CAUSALITY (verified): replay offers enter the buffer through DelayedReplay,
+so a window's H-step label is trainable only from slot t+H-1 (when its last
+label has been observed). After each update, forecasts are refreshed ONLY
+for slots not yet served. The evolving pass therefore never benefits from
+future labels - identical information budget to a real deployment.
+
 Usage:
   python scripts/demo_evolution.py --config configs/default.yaml
   python scripts/demo_evolution.py --shift 0.5 --at 0.15 --eval-every 24
@@ -34,7 +40,7 @@ import pandas as pd
 import torch
 import yaml
 
-from ucra.core.evolve import DriftMonitor, EvolutionEngine
+from ucra.core.evolve import DelayedReplay, DriftMonitor, EvolutionEngine
 from ucra.core.transform import phi_transform, update_reservation
 from ucra.core.uncertainty import UncertaintyState, extract_uncertainty
 from ucra.data import load_dataset
@@ -54,12 +60,18 @@ def fresh_model(mc: dict, ckpt: Path) -> QuantileLSTM:
 
 def run_pass(model, pred_q, Xz, Yz, D, capacity, cfg, mc, scY, train_ref,
              evolving: bool, eval_every: int):
-    """One closed-loop pass. Xz/Yz: z-space test windows; D: realized demand."""
+    """One closed-loop pass. Xz/Yz: z-space test windows; D: realized demand.
+
+    pred_q is copied per slot into pred_q_used (the forecast actually
+    served). After a Stage-5 update at t, only entries for slots t+1.. are
+    refreshed - past slots keep what they were served with.
+    """
     state = UncertaintyState(cfg["update"]["drift_window"])
     state.set_reference(train_ref)
     drift = DriftMonitor(cfg["evolution"])
     drift.set_reference(train_ref)
     evo = EvolutionEngine(model, cfg["evolution"], mc)
+    causal = DelayedReplay(evo.buffer, mc["horizon"])   # <-- causal intake
     loss_fn = make_loss(mc["quantiles"])
 
     n = len(D)
@@ -67,9 +79,10 @@ def run_pass(model, pred_q, Xz, Yz, D, capacity, cfg, mc, scY, train_ref,
     viol = np.zeros(n)
     updates = []
     r_prev = float(np.quantile(train_ref, 0.9))
+    pred_q_used = pred_q.copy()
 
     for t in range(n):
-        unc = extract_uncertainty(pred_q[t], mc["quantiles"], state)
+        unc = extract_uncertainty(pred_q_used[t], mc["quantiles"], state)
         r_target = phi_transform(unc["u_hat"], unc["spread"], unc["rho_t"],
                                  capacity, cfg["phi"])
         r_t = update_reservation(r_prev, r_target, D[t - 1] if t else r_target,
@@ -77,42 +90,30 @@ def run_pass(model, pred_q, Xz, Yz, D, capacity, cfg, mc, scY, train_ref,
         R[t] = r_t
         v = float(D[t] > R[t])
         viol[t] = v
-        state.observe(bool(v), D[t])
+        state.observe(bool(v), D[t])            # slot t is now history
         stats = drift.observe(bool(v), D[t])
+
+        causal.flush(t)     # release offers whose labels are all observed
 
         if evolving and t > 0 and t % eval_every == 0 and drift.triggered(stats):
             if evo.buffer.X:
                 res = evo.finetune(loss_fn)
                 if res.get("updated"):
                     updates.append(t)
-                    pred_q = scY.inverse(predict_quantiles(model, Xz))
+                    refreshed = scY.inverse(predict_quantiles(model, Xz))
+                    pred_q_used[t + 1:] = refreshed[t + 1:]   # causal refresh
         if evolving:
-            evo.remember(Xz[t], Yz[t])
+            causal.offer(t, Xz[t], Yz[t])       # trainable from t+H-1
         r_prev = r_t
-    return R, viol, updates
+    return R, viol, updates, pred_q_used
 
 
-def main():
-    ap = argparse.ArgumentParser(description="UCRA Stage-5 drift demo")
-    ap.add_argument("--config", default="configs/default.yaml")
-    ap.add_argument("--shift", type=float, default=0.35,
-                    help="surge size; 0.35 = demand multiplied by 1.35")
-    ap.add_argument("--at", type=float, default=0.15,
-                    help="fraction of the TEST window where the surge starts")
-    ap.add_argument("--eval-every", type=int, default=24,
-                    help="Stage-5 trigger check cadence (slots)")
-    ap.add_argument("--ft-epochs", type=int, default=None,
-                    help="override evolution.finetune_epochs for the demo")
-    ap.add_argument("--lr-scale", type=float, default=1.0,
-                    help="multiply model lr for fine-tuning (demo only)")
-    args = ap.parse_args()
-    cfg = yaml.safe_load(open(args.config))
+def run_drift_demo(cfg: dict, shift: float, at: float, eval_every: int,
+                   make_figures: bool = True, verbose: bool = True) -> dict:
+    """A/B drift demo. Returns the results dict (and writes JSON/figure)."""
     mc = dict(cfg["model"])
-    if args.ft_epochs:
-        cfg["evolution"] = dict(cfg["evolution"], finetune_epochs=args.ft_epochs)
-    mc["lr"] = mc["lr"] * args.lr_scale
     out = Path(cfg["paths"]["outputs"])
-    out.mkdir(exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     ckpt = out / "model.pt"
     if not ckpt.exists():
         raise SystemExit("no outputs/model.pt - run scripts/train.py first")
@@ -129,8 +130,8 @@ def main():
     # ---- inject the surge into the TEST segment of the series ----
     s = series.copy()
     vals = s.values.copy()
-    t0 = ite[0] + mc["seq_len"] + int(args.at * len(ite))
-    vals[t0:] *= (1.0 + args.shift)
+    t0 = ite[0] + mc["seq_len"] + int(at * len(ite))
+    vals[t0:] *= (1.0 + shift)
     s[:] = vals
 
     # windows from the DRIFTED series (the model must forecast what it sees)
@@ -149,18 +150,18 @@ def main():
     # ---------- pass A: frozen (Stages 1-4 only) ----------
     model_a = fresh_model(mc, ckpt)
     pred_q_a = scY.inverse(predict_quantiles(model_a, Xz))
-    R_f, viol_f, _ = run_pass(model_a, pred_q_a, Xz, Yz, D, capacity, cfg, mc,
-                              scY, train_ref, evolving=False,
-                              eval_every=args.eval_every)
+    R_f, viol_f, _, _ = run_pass(model_a, pred_q_a, Xz, Yz, D, capacity, cfg, mc,
+                                 scY, train_ref, evolving=False,
+                                 eval_every=eval_every)
 
     # ---------- pass B: self-evolving (Stage 5 on) ----------
     model_b = fresh_model(mc, ckpt)
     pred_q_b = scY.inverse(predict_quantiles(model_b, Xz))
-    R_e, viol_e, upd_e = run_pass(model_b, pred_q_b, Xz, Yz, D, capacity, cfg,
-                                  mc, scY, train_ref, evolving=True,
-                                  eval_every=args.eval_every)
+    R_e, viol_e, upd_e, _ = run_pass(model_b, pred_q_b, Xz, Yz, D, capacity, cfg,
+                                     mc, scY, train_ref, evolving=True,
+                                     eval_every=eval_every)
 
-    d0 = int(args.at * len(ite))
+    d0 = int(at * len(ite))
 
     def post(v):
         return float(np.mean(v[d0:]))
@@ -169,10 +170,13 @@ def main():
         return float(np.mean(np.minimum(D[d0:] / np.maximum(R[d0:], 1e-9), 1.0)))
 
     res = {
-        "shift": args.shift,
+        "shift": shift,
         "surge_start_slot": d0,
         "n_test": int(len(ite)),
         "capacity": float(capacity),
+        "causal_replay": True,
+        "label_delay_slots": int(mc["horizon"]) - 1,
+        "eval_every": int(eval_every),
         "frozen": {
             "viol_overall": float(np.mean(viol_f)),
             "viol_post_surge": post(viol_f),
@@ -188,7 +192,11 @@ def main():
         },
     }
     (out / "drift_demo.json").write_text(json.dumps(res, indent=2))
-    print(json.dumps(res, indent=2))
+    if verbose:
+        print(json.dumps(res, indent=2))
+
+    if not make_figures:
+        return res
 
     W = cfg["update"]["drift_window"]
     roll_f = pd.Series(viol_f).rolling(W, min_periods=8).mean()
@@ -206,7 +214,7 @@ def main():
                 va="top", ha="right", fontsize=8)
     ax.set_ylabel("demand / reservation")
     ax.set_title("Stage-5 demo: +{:.0f}% demand surge on the test window"
-                 .format(100 * args.shift))
+                 .format(100 * shift))
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
 
     ax = axes[1]
@@ -225,6 +233,32 @@ def main():
     fig.savefig(p, dpi=150)
     plt.close(fig)
     print("[demo] saved {}".format(p))
+    return res
+
+
+def main():
+    ap = argparse.ArgumentParser(description="UCRA Stage-5 drift demo")
+    ap.add_argument("--config", default="configs/default.yaml")
+    ap.add_argument("--shift", type=float, default=0.35,
+                    help="surge size; 0.35 = demand multiplied by 1.35")
+    ap.add_argument("--at", type=float, default=0.15,
+                    help="fraction of the TEST window where the surge starts")
+    ap.add_argument("--eval-every", type=int, default=24,
+                    help="Stage-5 trigger check cadence (slots)")
+    ap.add_argument("--ft-epochs", type=int, default=None,
+                    help="override evolution.finetune_epochs for the demo")
+    ap.add_argument("--lr-scale", type=float, default=1.0,
+                    help="multiply model lr for fine-tuning (demo only)")
+    args = ap.parse_args()
+    cfg = yaml.safe_load(open(args.config))
+    if args.ft_epochs:
+        cfg["evolution"] = dict(cfg["evolution"], finetune_epochs=args.ft_epochs)
+    cfg["_demo_lr_scale"] = args.lr_scale
+    mc = dict(cfg["model"])
+    mc["lr"] = mc["lr"] * args.lr_scale
+    cfg["model"] = mc
+    run_drift_demo(cfg, shift=args.shift, at=args.at,
+                   eval_every=args.eval_every)
 
 
 if __name__ == "__main__":

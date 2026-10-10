@@ -1,0 +1,141 @@
+\section{System Model and Problem Formulation}
+\label{sec:system}
+
+\subsection{Network and Slicing Model}
+
+We consider an operator infrastructure divided into a set of
+\emph{reservable pools} --- a radio access network partitioned into
+sectors, or a slicing-enabled transport/compute fabric partitioned
+into slices. Time is slotted at the operational control granularity
+$\delta$; throughout this paper $\delta = 15$ minutes, the standard
+PM-counter granularity of 3GPP performance management and of our
+dataset. Each pool $i$ has a physical capacity $C_i$: the maximum
+demand it can serve in one slot. The aggregate demand offered to pool
+$i$ in slot $t$ is $\Dt^{(i)} \ge 0$, a realization of a stochastic
+process with strong diurnal and weekly seasonality, heavy-tailed
+within-slot bursts, and occasional regime shifts
+(mass events, flash crowds, gradual traffic evolution).
+
+At each slot $t$ the controller commits a \emph{reservation}
+$\Rt^{(i)} \in [0, C_i]$ for pool $i$ covering slot $t+1$. The
+reservation is a hard commitment in the operational sense: demand up
+to $\Rt$ is served with contracted quality; demand beyond $\Rt$
+violates the SLA (blocked, degraded, or served from best-effort
+overflow at a quality penalty). Reservations may be revised every
+slot, but large swings are themselves costly --- reconfiguration
+signaling, spectrum map churn, and upstream commitment churn --- which
+we model with a switching penalty implicitly smoothed by the update
+mechanism of Section~\ref{sec:stage4}.
+
+\subsection{Closed-Loop Decision Process}
+
+The controller observes, at the end of slot $t$: the demand history
+$\{\D_{t-k}\}_{k=0}^{K-1}$ (a window of $K$ past slots; $K=96$, i.e.,
+24 hours), the realized outcome of past reservations
+$\mathbf{1}[\D_{t} > R_{t}]$, and auxiliary feedback (recent
+violation rate, demand level relative to training statistics). It
+does \emph{not} observe $\D_{t+1}, \D_{t+2}, \dots$. This is the
+defining constraint of the problem and, as
+Section~\ref{sec:leakage-audit} details, the constraint most often
+violated inadvertently in experimental harnesses. Formally, the
+information set available when choosing $R_{t+1}$ is
+\begin{equation}
+\mathcal{F}_t \;=\; \sigma\bigl(\D_{t-K+1..t},\;
+\{R_{s}\}_{s\le t},\; \{\mathbf{1}[\D_s > R_s]\}_{s \le t}\bigr),
+\label{eq:filtration}
+\end{equation}
+and any admissible policy must be $\mathcal{F}_t$-measurable. All
+components of UCRA --- the forecaster, the transform, the risk state,
+the replay buffer --- are functions of $\mathcal{F}_t$ only; the unit
+tests of Section~\ref{sec:setup} enforce this mechanically.
+
+\subsection{Reservation Metrics}
+
+For a pool with capacity $C$ and a reservation trajectory
+$\{R_t\}_{t=1}^{T}$ against realized demand $\{\D_t\}_{t=1}^{T}$,
+we use four closed-loop metrics.
+
+\emph{Violation rate} (risk exposure):
+\begin{equation}
+V \;=\; \frac{1}{T}\sum_{t=1}^{T} \mathbf{1}[\D_t > R_t].
+\label{eq:violation}
+\end{equation}
+This is the SLA-failure frequency --- the quantity the operator is
+contractually penalized for.
+
+\emph{Utilization} (efficiency of the committed capacity):
+\begin{equation}
+U \;=\; \frac{1}{T}\sum_{t=1}^{T} \min\!\left(\frac{\D_t}{R_t},\,1\right).
+\label{eq:utilization}
+\end{equation}
+Per-slot utilization is capped at 1: over-demand does not inflate
+utilization; it appears as violations instead. A policy can therefore
+exhibit both high utilization and high violation rate
+(median-forecast policies do exactly this on our data).
+
+\emph{Waste} (idle committed capacity):
+\begin{equation}
+W \;=\; \frac{1}{T\,C}\sum_{t=1}^{T} \max(R_t - \D_t,\, 0),
+\label{eq:waste}
+\end{equation}
+the fraction of physical capacity that was reserved, went unused, and
+could have been monetized by other tenants.
+
+\emph{Reservation error} (tracking):
+\begin{equation}
+E \;=\; \frac{1}{T\,C}\sum_{t=1}^{T} |R_t - \D_t|,
+\label{eq:reserr}
+\end{equation}
+the mean absolute gap, normalized. We emphasize --- and our results
+demonstrate --- that $E$ alone is \emph{not} a meaningful objective:
+a policy that tracks demand with the median minimizes $E$ while
+violating half the time. $V$, $U$, and $W$ are the operational
+objectives; $E$ is diagnostic.
+
+\subsection{Objective}
+
+The operator's problem is to choose an
+$\mathcal{F}_t$-measurable reservation policy $\pi$ to
+\begin{equation}
+\min_{\pi}\; \mathbb{E}\bigl[W(\pi)\bigr]
+\quad \text{subject to} \quad
+V(\pi) \;\le\; \epsilon,
+\label{eq:objective}
+\end{equation}
+i.e., minimize waste subject to a violation budget $\epsilon$
+(typically $\epsilon \le 0.01$ for service-grade slices, and
+$\epsilon = 0$ is desirable for URLLC-grade commitments). This is a
+chance-constrained sequential decision problem with unknown dynamics;
+exact solutions are intractable without a full demand model, and
+learned policies raise the auditability concerns discussed earlier.
+UCRA's design stance is to solve the problem \emph{implicitly}:
+a calibrated quantile forecast makes $V$ approximately
+$(1-\tau)$-controllable by construction; $\kappa$ buys the remaining
+headroom that forecast errors consume; and the closed loop adapts the
+forecast when the world drifts. The frontier
+$(V(\kappa), U(\kappa))$ is then an empirical property of the
+ deployed system, which we measure in full.
+
+\subsection{Threat Model for Evaluation}
+
+A reservation policy can cheat in three ways: (i) by using future
+demand anywhere in its decision path (forecast leakage); (ii) by
+using the \emph{current} slot's realized demand to size its own
+reservation (outcome leakage --- a policy cannot know what it must
+protect before the protection is committed); and (iii) by adapting on
+labels that are not yet observable (label-availability leakage).
+Category (iii) is the subtle one that motivates
+Section~\ref{sec:stage5}: an online-updated model is entitled to learn
+from history, but only from the part of history that has already
+happened. Our evaluation protocol is designed to make all three
+categories detectable and, in our final pipeline, impossible.
+
+\diagramplaceholder{4.2cm}{ucra-architecture}
+{Suggested content: the five UCRA stages arranged as a closed loop
+over the network --- Stage 1 (Quantile LSTM) feeding Stage 2
+(uncertainty-to-reservation transform $\Phi$), feeding Stage 3
+(risk-adaptive allocation), feeding the network/slices; reservation
+and demand feedback returning through Stage 4 (EWMA update and
+release hysteresis) and Stage 5 (drift monitor, replay buffer,
+fine-tuning). Mark the information boundary ``observable at time $t$''
+around the feedback path.}

@@ -1,212 +1,239 @@
 {
   "URLLC": {
     "operator": {
-      "n": 577,
-      "violation_rate": 0.2616984402079723,
-      "utilization": 0.508419062124396,
-      "over_provision": 0.4915809378756039
+      "n": 486,
+      "violation_rate": 0.29218106995884774,
+      "utilization": 0.5490758247232315,
+      "over_provision": 0.45092417527676837
     },
     "static_q90": {
-      "n": 577,
-      "violation_rate": 0.09878682842287695,
-      "utilization": 0.38695446667717026,
-      "over_provision": 0.6130455333228297
+      "n": 486,
+      "violation_rate": 0.12139917695473251,
+      "utilization": 0.4328469884025439,
+      "over_provision": 0.567153011597456
+    },
+    "phi_train_only": {
+      "n": 486,
+      "violation_rate": 0.012345679012345678,
+      "utilization": 0.18589235238560786,
+      "over_provision": 0.8141076476143921
     },
     "ucra_phi": {
-      "n": 577,
-      "violation_rate": 0.010398613518197574,
-      "utilization": 0.16435199210002988,
-      "over_provision": 0.8356480078999701
+      "n": 486,
+      "violation_rate": 0.012345679012345678,
+      "utilization": 0.1855835617837622,
+      "over_provision": 0.8144164382162379
     },
+    "causal_rho": true,
+    "n_train": 3709,
+    "n_test": 486,
     "kappa_sweep": {
       "0.0": {
-        "n": 577,
-        "violation_rate": 0.09878682842287695,
-        "utilization": 0.38695446667717026,
-        "over_provision": 0.6130455333228297
+        "n": 486,
+        "violation_rate": 0.12139917695473251,
+        "utilization": 0.4328469884025439,
+        "over_provision": 0.567153011597456
       },
       "0.25": {
-        "n": 577,
-        "violation_rate": 0.024263431542461005,
-        "utilization": 0.23222777186139562,
-        "over_provision": 0.7677722281386042
+        "n": 486,
+        "violation_rate": 0.03292181069958848,
+        "utilization": 0.2594890519493401,
+        "over_provision": 0.74051094805066
       },
       "0.5": {
-        "n": 577,
-        "violation_rate": 0.010398613518197574,
-        "utilization": 0.16435199210002988,
-        "over_provision": 0.8356480078999701
+        "n": 486,
+        "violation_rate": 0.012345679012345678,
+        "utilization": 0.1855835617837622,
+        "over_provision": 0.8144164382162379
       },
       "0.75": {
-        "n": 577,
-        "violation_rate": 0.006932409012131715,
-        "utilization": 0.1267352804698973,
-        "over_provision": 0.8732647195301027
+        "n": 486,
+        "violation_rate": 0.00411522633744856,
+        "utilization": 0.14243586471090489,
+        "over_provision": 0.8575641352890951
       },
       "1.0": {
-        "n": 577,
-        "violation_rate": 0.0017331022530329288,
-        "utilization": 0.10286914859823426,
-        "over_provision": 0.8971308514017656
+        "n": 486,
+        "violation_rate": 0.00411522633744856,
+        "utilization": 0.1154777391118475,
+        "over_provision": 0.8845222608881524
       },
       "1.5": {
-        "n": 577,
-        "violation_rate": 0.0017331022530329288,
-        "utilization": 0.07449796334768109,
-        "over_provision": 0.925502036652319
+        "n": 486,
+        "violation_rate": 0.00205761316872428,
+        "utilization": 0.08390116129741097,
+        "over_provision": 0.916098838702589
       },
       "2.0": {
-        "n": 577,
-        "violation_rate": 0.0,
-        "utilization": 0.05827817867078505,
-        "over_provision": 0.9417218213292148
+        "n": 486,
+        "violation_rate": 0.00205761316872428,
+        "utilization": 0.06597528962704118,
+        "over_provision": 0.9340247103729589
       }
     },
     "operator_qos_gap": {
-      "drops_violated": 2.5741490951149735,
-      "drops_ok": 2.906934275473508,
-      "delay_violated": -0.979204372507255,
-      "delay_ok": -0.9751514424552137
+      "drops_violated": 2.3967098734210497,
+      "drops_ok": 2.41214245624616,
+      "delay_violated": -0.9820965199743641,
+      "delay_ok": -0.9792015669732358
     }
   },
   "eMBB": {
     "operator": {
-      "n": 337,
-      "violation_rate": 0.4421364985163205,
-      "utilization": 0.729738746639807,
-      "over_provision": 0.27026125336019297
+      "n": 316,
+      "violation_rate": 0.43670886075949367,
+      "utilization": 0.7150801458094761,
+      "over_provision": 0.2849198541905239
     },
     "static_q90": {
-      "n": 337,
-      "violation_rate": 0.05341246290801187,
-      "utilization": 0.4102373887240356,
-      "over_provision": 0.5897626112759644
+      "n": 316,
+      "violation_rate": 0.04430379746835443,
+      "utilization": 0.40189873417721517,
+      "over_provision": 0.5981012658227848
+    },
+    "phi_train_only": {
+      "n": 316,
+      "violation_rate": 0.0189873417721519,
+      "utilization": 0.2135793225547312,
+      "over_provision": 0.7864206774452687
     },
     "ucra_phi": {
-      "n": 337,
-      "violation_rate": 0.011869436201780416,
-      "utilization": 0.21792066293906098,
-      "over_provision": 0.7820793370609389
+      "n": 316,
+      "violation_rate": 0.0189873417721519,
+      "utilization": 0.2132516161620742,
+      "over_provision": 0.7867483838379259
     },
+    "causal_rho": true,
+    "n_train": 3709,
+    "n_test": 316,
     "kappa_sweep": {
       "0.0": {
-        "n": 337,
-        "violation_rate": 0.05341246290801187,
-        "utilization": 0.4102373887240356,
-        "over_provision": 0.5897626112759644
+        "n": 316,
+        "violation_rate": 0.04430379746835443,
+        "utilization": 0.40189873417721517,
+        "over_provision": 0.5981012658227848
       },
       "0.25": {
-        "n": 337,
-        "violation_rate": 0.02967359050445104,
-        "utilization": 0.28519367478072016,
-        "over_provision": 0.7148063252192797
+        "n": 316,
+        "violation_rate": 0.022151898734177215,
+        "utilization": 0.2788764988232471,
+        "over_provision": 0.721123501176753
       },
       "0.5": {
-        "n": 337,
-        "violation_rate": 0.011869436201780416,
-        "utilization": 0.21792066293906098,
-        "over_provision": 0.7820793370609389
+        "n": 316,
+        "violation_rate": 0.0189873417721519,
+        "utilization": 0.2132516161620742,
+        "over_provision": 0.7867483838379259
       },
       "0.75": {
-        "n": 337,
-        "violation_rate": 0.011869436201780416,
-        "utilization": 0.17581349072815963,
-        "over_provision": 0.8241865092718406
+        "n": 316,
+        "violation_rate": 0.012658227848101266,
+        "utilization": 0.17327451138537742,
+        "over_provision": 0.8267254886146226
       },
       "1.0": {
-        "n": 337,
-        "violation_rate": 0.008902077151335312,
-        "utilization": 0.14791980895837695,
-        "over_provision": 0.8520801910416231
+        "n": 316,
+        "violation_rate": 0.012658227848101266,
+        "utilization": 0.14623381648096795,
+        "over_provision": 0.8537661835190319
       },
       "1.5": {
-        "n": 337,
-        "violation_rate": 0.002967359050445104,
-        "utilization": 0.11218887086806255,
-        "over_provision": 0.8878111291319376
+        "n": 316,
+        "violation_rate": 0.00949367088607595,
+        "utilization": 0.11216623232891111,
+        "over_provision": 0.8878337676710889
       },
       "2.0": {
-        "n": 337,
+        "n": 316,
         "violation_rate": 0.0,
-        "utilization": 0.08948567316855559,
-        "over_provision": 0.9105143268314445
+        "utilization": 0.09079154138361963,
+        "over_provision": 0.9092084586163804
       }
     },
     "operator_qos_gap": {
-      "drops_violated": 2.721605501740709,
-      "drops_ok": 2.8196366308778043,
-      "delay_violated": -0.9731426359884163,
-      "delay_ok": -0.9723643922262988
+      "drops_violated": 2.3882754089978855,
+      "drops_ok": 3.010190569336703,
+      "delay_violated": -0.9793542293120261,
+      "delay_ok": -0.9717169108855545
     }
   },
   "mMTC": {
     "operator": {
-      "n": 630,
-      "violation_rate": 0.05396825396825397,
-      "utilization": 0.17867549132132993,
-      "over_provision": 0.82132450867867
+      "n": 567,
+      "violation_rate": 0.0582010582010582,
+      "utilization": 0.1993741409140157,
+      "over_provision": 0.8006258590859843
     },
     "static_q90": {
-      "n": 630,
-      "violation_rate": 0.11428571428571428,
-      "utilization": 0.36756756756756753,
-      "over_provision": 0.6324324324324324
+      "n": 567,
+      "violation_rate": 0.1763668430335097,
+      "utilization": 0.42168177645760463,
+      "over_provision": 0.5783182235423955
+    },
+    "phi_train_only": {
+      "n": 567,
+      "violation_rate": 0.026455026455026454,
+      "utilization": 0.18518870829431475,
+      "over_provision": 0.8148112917056852
     },
     "ucra_phi": {
-      "n": 630,
-      "violation_rate": 0.015873015873015872,
-      "utilization": 0.1559353347807639,
-      "over_provision": 0.8440646652192361
+      "n": 567,
+      "violation_rate": 0.026455026455026454,
+      "utilization": 0.1843796021949804,
+      "over_provision": 0.8156203978050196
     },
+    "causal_rho": true,
+    "n_train": 3709,
+    "n_test": 567,
     "kappa_sweep": {
       "0.0": {
-        "n": 630,
-        "violation_rate": 0.11428571428571428,
-        "utilization": 0.36756756756756753,
-        "over_provision": 0.6324324324324324
+        "n": 567,
+        "violation_rate": 0.1763668430335097,
+        "utilization": 0.42168177645760463,
+        "over_provision": 0.5783182235423955
       },
       "0.25": {
-        "n": 630,
-        "violation_rate": 0.025396825396825397,
-        "utilization": 0.2202395866282476,
-        "over_provision": 0.7797604133717524
+        "n": 567,
+        "violation_rate": 0.037037037037037035,
+        "utilization": 0.26011382557818463,
+        "over_provision": 0.7398861744218154
       },
       "0.5": {
-        "n": 630,
-        "violation_rate": 0.015873015873015872,
-        "utilization": 0.1559353347807639,
-        "over_provision": 0.8440646652192361
+        "n": 567,
+        "violation_rate": 0.026455026455026454,
+        "utilization": 0.1843796021949804,
+        "over_provision": 0.8156203978050196
       },
       "0.75": {
-        "n": 630,
-        "violation_rate": 0.007936507936507936,
-        "utilization": 0.12063546514982784,
-        "over_provision": 0.8793645348501721
+        "n": 567,
+        "violation_rate": 0.015873015873015872,
+        "utilization": 0.14405901774645488,
+        "over_provision": 0.8559409822535451
       },
       "1.0": {
-        "n": 630,
-        "violation_rate": 0.004761904761904762,
-        "utilization": 0.09788393270923551,
-        "over_provision": 0.9021160672907644
+        "n": 567,
+        "violation_rate": 0.007054673721340388,
+        "utilization": 0.1185906394305971,
+        "over_provision": 0.881409360569403
       },
       "1.5": {
-        "n": 630,
-        "violation_rate": 0.004761904761904762,
-        "utilization": 0.07144709443414128,
-        "over_provision": 0.9285529055658586
+        "n": 567,
+        "violation_rate": 0.005291005291005291,
+        "utilization": 0.08662959896619792,
+        "over_provision": 0.9133704010338022
       },
       "2.0": {
-        "n": 630,
-        "violation_rate": 0.0015873015873015873,
-        "utilization": 0.05644865047784016,
-        "over_provision": 0.9435513495221598
+        "n": 567,
+        "violation_rate": 0.005291005291005291,
+        "utilization": 0.06862526143920632,
+        "over_provision": 0.9313747385607936
       }
     },
     "operator_qos_gap": {
-      "drops_violated": 1.2322021661414393,
-      "drops_ok": 2.3614994687146282,
-      "delay_violated": -0.9924225274225787,
-      "delay_ok": -0.9790856372053818
+      "drops_violated": 0.9871748921386442,
+      "drops_ok": 2.3529363390449687,
+      "delay_violated": -0.9945669584918982,
+      "delay_ok": -0.9808888020668786
     }
   }
 }

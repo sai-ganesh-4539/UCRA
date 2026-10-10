@@ -1,0 +1,97 @@
+% ============================================================
+% UCRA -- Uncertainty-to-Reservation Closed-Loop Framework
+% IEEE journal-style manuscript (IEEEtran, two-column)
+%
+% Build:  tectonic main.tex     (or pdflatex + bibtex + pdflatex x2)
+% Figures: figures/*.png are the VERIFIED experiment outputs.
+%          Boxes marked [PLACEHOLDER] are for the authors' own
+%          diagrams -- drop your PDF/PNG in figures/ and replace
+%          the \framebox with \includegraphics.
+% ============================================================
+\documentclass[journal]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{url}
+
+\graphicspath{{figures/}}
+
+% ---------- placeholder helper for the authors' own diagrams ----------
+\newcommand{\diagramplaceholder}[3]{%
+  \begin{center}
+    \fbox{\parbox[c][#1][c]{0.93\linewidth}{\centering
+      {\large\bfseries [DIAGRAM PLACEHOLDER --- #2]}\\[6pt]
+      {\itshape #3}\\[6pt]
+      {\small Insert your diagram as \texttt{figures/#2.pdf} or
+       \texttt{.png} and replace this box with
+       \texttt{\textbackslash includegraphics\{#2\}}.}}}
+  \end{center}}
+
+% ---------- math shorthands ----------
+\newtheorem{proposition}{Proposition}
+\newcommand{\Rt}{R_t}
+\newcommand{\D}{D}
+\newcommand{\Dt}{D_t}
+\newcommand{\uhat}{\hat{u}_t}
+\newcommand{\spread}{\Delta_t}
+\newcommand{\rhot}{\rho_t}
+
+\newcommand{\qtau}{\hat{q}_{t,\tau}}
+
+\begin{document}
+
+\title{UCRA: Uncertainty-Aware Quantile Reservations for Self-Evolving
+Resource Allocation in 5G Network Slicing}
+
+\author{Tirumala~Sai~Kalyana~Madhur,
+        Jadapola~Sai~Ganesh~Reddy,
+        Sunkara~Ankit,
+        Dhurbhakula~Dhanurdhar,
+        and~Deepthi~Godavarthi%
+\thanks{T.~S.~K.~Madhur, J.~S.~G.~Reddy, S.~Ankit, and
+D.~Dhanurdhar are with the Department of Computer Science and
+Engineering (B.Tech.\ undergraduate program).}%
+\thanks{D.~Godavarthi is the project supervisor, Department of
+Computer Science and Engineering
+(e-mail: see Acknowledgment section).}%
+\thanks{Code, configuration, and verified result artifacts for this
+paper are available at the project repository
+(\texttt{github.com/sai-ganesh-4539/UCRA}). The two datasets used are
+publicly available on Zenodo (records 17815388 and 10610616).}}
+
+\markboth{Uncertainty-Aware Quantile Reservations for 5G Network Slicing}%
+{Madhur \MakeLowercase{\textit{et al.}}: UCRA}
+
+\maketitle
+
+\input{sections/00_abstract}
+\input{sections/01_introduction}
+\input{sections/02_related}
+\input{sections/03_novelty}
+\input{sections/04_system}
+\input{sections/05_methodology}
+\input{sections/06_setup}
+\input{sections/07_results}
+\input{sections/08_discussion}
+\input{sections/09_conclusion}
+\input{sections/10_appendix}
+\input{sections/11_appendix_audit}
+
+\section*{Acknowledgment}
+The authors thank Dr.\ Deepthi~Godavarthi for supervising this work,
+for her guidance on the experimental methodology, and in particular for
+the pre-submission review that identified the online-learning
+information-flow issues that are now formally handled by the causal
+replay protocol in Section~\ref{sec:stage5} and audited in
+Section~\ref{sec:leakage-audit}. The authors also thank the maintainers
+of the two public datasets used in this study.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
