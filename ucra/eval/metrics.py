@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 
 
 def reservation_error(R: np.ndarray, D: np.ndarray,
@@ -31,4 +32,30 @@ def summarize(R: np.ndarray, D: np.ndarray, capacity: float) -> dict:
         "violation_rate": violation_rate(R, D),
         "utilization": utilization(R, D),
         "waste": waste(R, D, capacity),
+    }
+
+
+def qos_gap(sub: pd.DataFrame, R: np.ndarray) -> dict | None:
+    """Service-performance feedback (architecture block: latency/reliability).
+
+    Splits the evaluated snapshots by whether the policy's reservation was
+    violated (offered > R) and compares the observed QoS columns of the CTTC
+    dataset (``drops_ratio`` = packet-drop ratio, ``avg_delay`` = average
+    delay) across the two groups. Returns None when either group is empty
+    (the gap is then undefined, e.g. a policy with zero violations).
+    """
+    off = np.asarray(sub["offered"].values, dtype=float)
+    R = np.asarray(R, dtype=float)
+    viol = off > R
+    if viol.all() or not viol.any():
+        return None
+    drops = np.asarray(sub["drops_ratio"].values, dtype=float)
+    delay = np.asarray(sub["avg_delay"].values, dtype=float)
+    return {
+        "n_violated": int(viol.sum()),
+        "n_ok": int((~viol).sum()),
+        "drops_violated": float(drops[viol].mean()),
+        "drops_ok": float(drops[~viol].mean()),
+        "delay_violated": float(delay[viol].mean()),
+        "delay_ok": float(delay[~viol].mean()),
     }

@@ -22,6 +22,11 @@ Policies (per slice type; quantiles from the TRAIN half of snapshots):
                     RAN loop's UncertaintyState). The current sample's
                     offered load is observed AFTER its reservation is fixed.
 
+Service-performance feedback (architecture diagram: latency / reliability):
+for EVERY policy the observed QoS (packet-drop ratio, average delay) is
+compared across violated vs. honored snapshots and saved in
+cttc_results.json under "qos_gap" (per slice type, per policy).
+
 CAUSALITY (verified): earlier versions fed `offered_now` of the sample being
 served into rho - outcome leakage. The sequential loop below fixes that.
 
@@ -48,6 +53,7 @@ import yaml
 
 from ucra.core.uncertainty import UncertaintyState
 from ucra.data.cttc_loader import load_cttc
+from ucra.eval.metrics import qos_gap
 
 
 def phi_empirical(offered_hist: np.ndarray, offered_now: float,
@@ -150,15 +156,19 @@ def evaluate_policies(df: pd.DataFrame, cfg: dict, out: Path,
             sweep_res[str(k)] = eval_policy(sub, np.array(Rk))
         entry["kappa_sweep"] = sweep_res
 
-        off = sub["offered"].values
-        viol = off > R_op
-        if viol.any() and (~viol).any():
-            entry["operator_qos_gap"] = {
-                "drops_violated": float(sub.loc[viol, "drops_ratio"].mean()),
-                "drops_ok": float(sub.loc[~viol, "drops_ratio"].mean()),
-                "delay_violated": float(sub.loc[viol, "avg_delay"].mean()),
-                "delay_ok": float(sub.loc[~viol, "avg_delay"].mean()),
-            }
+        # Service-performance feedback (diagram block: latency / reliability):
+        # observed QoS split by each policy's reservation-violation state.
+        qos = {}
+        for pol, R_pol in (("operator", R_op), ("static_q90", R_q90),
+                           ("phi_train_only", R_tr), ("ucra_phi", R_phi)):
+            gap = qos_gap(sub, np.asarray(R_pol, dtype=float))
+            if gap is not None:
+                qos[pol] = gap
+        if qos:
+            entry["qos_gap"] = qos
+        op_gap = qos.get("operator")
+        if op_gap is not None:
+            entry["operator_qos_gap"] = op_gap   # backward-compatible field
         results[str(stype)] = entry
 
     results["_meta"] = {"n_samples_parsed": int(df["sample"].nunique()),

@@ -13,7 +13,9 @@
 | 3. Risk-Adaptive Allocation | R_t, per-slice/sector demand | A_t allocation | ucra/core/allocate.py | 5 |
 | 4. Reservation Update & Release | R_t, realized D_t, EWMA, hysteresis | R_t+1 | ucra/core/transform.py | 5 |
 | 5. Self-Evolving Learning | violation/drift triggers, replay buffer | theta_t+1 model weights | ucra/core/evolve.py | 7 |
-| Feedback & Evaluation | A_t vs D_t | reservation error, violation rate (risk exposure), utilization, latency proxy (CTTC AvgDelay) | ucra/eval/ | 6 |
+| Feedback & Evaluation | A_t vs D_t | reservation error, violation rate (risk exposure), utilization, waste | ucra/eval/metrics.py | 6 |
+| Feedback & Evaluation (service performance) | A_t vs D_t + observed QoS | packet-drop ratio and average delay split by reservation-violation state, per policy (`qos_gap` in cttc_results.json; latency proxy: CTTC AvgDelay) | ucra/eval/metrics.py (`qos_gap`) + scripts/run_cttc_eval.py | 6 |
+| Feedback & Evaluation (allocation accounting) | R_t, per-entity demands | per-slot A_i totals and unmet_i sums logged in ucra_log.csv; summarized under "allocation" in ucra_results.json | ucra/core/allocate.py (`allocation_totals`, `allocation_summary`) + scripts/run_ucra.py | 7a |
 
 ## Phi — core equation (implemented in ucra/core/transform.py)
 

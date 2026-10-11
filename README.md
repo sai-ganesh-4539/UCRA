@@ -99,6 +99,14 @@ transform holds near-zero violations in exchange for over-provisioning
 (see `outputs/fig_cttc_slices.png` and the kappa sweep inside
 `outputs/cttc_results.json`).
 
+Service-performance feedback (the architecture diagram's
+"latency / reliability" block): for every policy, observed packet-drop
+ratio and average delay are compared across violated vs. honored
+snapshots and saved in `outputs/cttc_results.json` under `qos_gap`
+(regenerate with `python scripts/run_cttc_eval.py` after pulling this
+change; the RAN PM dataset carries no per-slice latency labels, so the
+latency signal is instantiated on the CTTC slicing dataset).
+
 ## Documentation
 
 Every module, equation, result and design decision is explained in
