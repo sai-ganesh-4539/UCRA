@@ -71,7 +71,43 @@
         "over_provision": 0.9340247103729589
       }
     },
+    "qos_gap": {
+      "operator": {
+        "n_violated": 142,
+        "n_ok": 344,
+        "drops_violated": 2.3967098734210497,
+        "drops_ok": 2.41214245624616,
+        "delay_violated": -0.9820965199743641,
+        "delay_ok": -0.9792015669732358
+      },
+      "static_q90": {
+        "n_violated": 59,
+        "n_ok": 427,
+        "drops_violated": 2.6502410530478624,
+        "drops_ok": 2.3741114399171996,
+        "delay_violated": -0.9795353910144715,
+        "delay_ok": -0.9801181658203724
+      },
+      "phi_train_only": {
+        "n_violated": 6,
+        "n_ok": 480,
+        "drops_violated": 1.717504550751863,
+        "drops_ok": 2.4162599576457438,
+        "delay_violated": -0.9951538969678166,
+        "delay_ok": -0.9798585864444705
+      },
+      "ucra_phi": {
+        "n_violated": 6,
+        "n_ok": 480,
+        "drops_violated": 1.717504550751863,
+        "drops_ok": 2.4162599576457438,
+        "delay_violated": -0.9951538969678166,
+        "delay_ok": -0.9798585864444705
+      }
+    },
     "operator_qos_gap": {
+      "n_violated": 142,
+      "n_ok": 344,
       "drops_violated": 2.3967098734210497,
       "drops_ok": 2.41214245624616,
       "delay_violated": -0.9820965199743641,
@@ -150,10 +186,46 @@
         "over_provision": 0.9092084586163804
       }
     },
+    "qos_gap": {
+      "operator": {
+        "n_violated": 138,
+        "n_ok": 178,
+        "drops_violated": 2.3882754089978855,
+        "drops_ok": 3.010190569336703,
+        "delay_violated": -0.9793542293120262,
+        "delay_ok": -0.9717169108855545
+      },
+      "static_q90": {
+        "n_violated": 14,
+        "n_ok": 302,
+        "drops_violated": 1.7225337159407517,
+        "drops_ok": 2.785696873379042,
+        "delay_violated": -0.9928624686857906,
+        "delay_ok": -0.9742265537122093
+      },
+      "phi_train_only": {
+        "n_violated": 6,
+        "n_ok": 310,
+        "drops_violated": 0.6933830897659651,
+        "drops_ok": 2.7781794491775664,
+        "delay_violated": -0.9948099464487413,
+        "delay_ok": -0.9746697874322447
+      },
+      "ucra_phi": {
+        "n_violated": 6,
+        "n_ok": 310,
+        "drops_violated": 0.6933830897659651,
+        "drops_ok": 2.7781794491775664,
+        "delay_violated": -0.9948099464487413,
+        "delay_ok": -0.9746697874322447
+      }
+    },
     "operator_qos_gap": {
+      "n_violated": 138,
+      "n_ok": 178,
       "drops_violated": 2.3882754089978855,
       "drops_ok": 3.010190569336703,
-      "delay_violated": -0.9793542293120261,
+      "delay_violated": -0.9793542293120262,
       "delay_ok": -0.9717169108855545
     }
   },
@@ -229,10 +301,46 @@
         "over_provision": 0.9313747385607936
       }
     },
+    "qos_gap": {
+      "operator": {
+        "n_violated": 33,
+        "n_ok": 534,
+        "drops_violated": 0.9871748921386442,
+        "drops_ok": 2.3529363390449687,
+        "delay_violated": -0.994566958491898,
+        "delay_ok": -0.9808888020668786
+      },
+      "static_q90": {
+        "n_violated": 100,
+        "n_ok": 467,
+        "drops_violated": 0.617451186109793,
+        "drops_ok": 2.628050659271112,
+        "delay_violated": -0.9950828989967904,
+        "delay_ok": -0.9788159315508925
+      },
+      "phi_train_only": {
+        "n_violated": 15,
+        "n_ok": 552,
+        "drops_violated": 0.5196620979579277,
+        "drops_ok": 2.321104791705108,
+        "delay_violated": -0.9979032662748512,
+        "delay_ok": -0.9812441683692448
+      },
+      "ucra_phi": {
+        "n_violated": 15,
+        "n_ok": 552,
+        "drops_violated": 0.5196620979579277,
+        "drops_ok": 2.321104791705108,
+        "delay_violated": -0.9979032662748512,
+        "delay_ok": -0.9812441683692448
+      }
+    },
     "operator_qos_gap": {
+      "n_violated": 33,
+      "n_ok": 534,
       "drops_violated": 0.9871748921386442,
       "drops_ok": 2.3529363390449687,
-      "delay_violated": -0.9945669584918982,
+      "delay_violated": -0.994566958491898,
       "delay_ok": -0.9808888020668786
     }
   },
