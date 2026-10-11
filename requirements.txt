@@ -12,3 +12,6 @@ scipy>=1.10
 torch>=2.2
 # dev / tests
 pytest>=8.0
+
+# needed by the CTTC dataset's datanetAPI.py (Zenodo 10610616)
+jsonpickle
