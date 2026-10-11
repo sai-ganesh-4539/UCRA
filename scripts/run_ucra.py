@@ -3,7 +3,10 @@
 
   Stage 1  quantile LSTM -> u_hat, U_t, rho_t
   Stage 2  Phi           -> R_t (then Stage 4 EWMA/hysteresis update)
-  Stage 3  risk-adaptive allocation across sectors (or single pool)
+  Stage 3  risk-adaptive allocation across sectors (or single pool);
+           per-entity allocation/unmet accounting is LOGGED each slot and
+           summarized in ucra_results.json under "allocation" (the headline
+           violation metric remains the aggregate D_t > R_t test)
   Stage 5  self-evolving fine-tuning when drift/violation triggers fire
   Feedback metrics + baselines + figures
 
@@ -33,7 +36,8 @@ import pandas as pd
 import torch
 import yaml
 
-from ucra.core.allocate import risk_adaptive_allocate
+from ucra.core.allocate import (allocation_summary, allocation_totals,
+                                risk_adaptive_allocate)
 from ucra.core.evolve import DelayedReplay, DriftMonitor, EvolutionEngine
 from ucra.core.transform import phi_transform, update_reservation
 from ucra.core.uncertainty import UncertaintyState, extract_uncertainty
@@ -115,7 +119,8 @@ def run_closed_loop(cfg: dict, make_figures: bool = True, verbose: bool = True):
 
     sector_frame = extras.get("sector_frame")
     R = np.empty(len(ite)); viol = np.zeros(len(ite))
-    log_rows = []; update_points = []; r_prev = float(np.quantile(
+    log_rows = []; update_points = []; alloc_totals = []
+    r_prev = float(np.quantile(
         series.values[itr], 0.9))  # start from train q90
     H = mc["horizon"]
 
@@ -136,6 +141,9 @@ def run_closed_loop(cfg: dict, make_figures: bool = True, verbose: bool = True):
             dem = np.array([D_test[t]])
         alloc = risk_adaptive_allocate(r_t, dem, risks=None,
                                        alloc_cfg=cfg["allocation"])
+        # Stage-3 accounting: record what the allocator handed out (the
+        # headline violation flag below stays the aggregate D_t > R_t test).
+        alloc_totals.append(allocation_totals(alloc, dem, r_t))
         v = float(D_test[t] > r_t)
         viol[t] = v
         state.observe(bool(v), D_test[t])          # feedback: slot t is now history
@@ -163,7 +171,10 @@ def run_closed_loop(cfg: dict, make_figures: bool = True, verbose: bool = True):
                          "R": r_t, "R_target": r_target, "u_hat": unc["u_hat"],
                          "spread": unc["spread"], "rho_t": unc["rho_t"],
                          "violated": int(v), "viol_rate": stats["viol_rate"],
-                         "z": stats["z"]})
+                         "z": stats["z"],
+                         "n_entities": alloc_totals[-1]["n_entities"],
+                         "alloc_total": alloc_totals[-1]["alloc_total"],
+                         "shortfall_total": alloc_totals[-1]["shortfall_total"]})
         r_prev = r_t
 
     # ---------- metrics + baselines (all vs the SAME D_test, capacity) ----------
@@ -186,6 +197,7 @@ def run_closed_loop(cfg: dict, make_figures: bool = True, verbose: bool = True):
         "replay_offered": causal.n_offered,
         "replay_released": causal.n_released,
         "n_test": len(ite),
+        "allocation": allocation_summary(alloc_totals),
     }
     (out / "ucra_results.json").write_text(json.dumps(res, indent=2))
     pd.DataFrame(log_rows).to_csv(out / "ucra_log.csv", index=False)
